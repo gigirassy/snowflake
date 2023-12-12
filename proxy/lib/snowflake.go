@@ -35,6 +35,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -848,6 +849,11 @@ func (sf *SnowflakeProxy) Stop() {
 // it is considered "unrestricted". If timeout it is considered "restricted"
 func (sf *SnowflakeProxy) checkNATType(config webrtc.Configuration, probeURL string) error {
 	log.Printf("Checking our NAT type, contacting NAT check probe server at \"%v\"...", probeURL)
+
+	if os.Getenv("SNOWFLAKE_TEST_ASSUMEUNRESTRICTED") != "" {
+		currentNATType = NATUnrestricted
+		return nil
+	}
 
 	probe, err := newSignalingServer(probeURL)
 	if err != nil {
