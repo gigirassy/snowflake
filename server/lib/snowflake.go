@@ -41,6 +41,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -265,6 +266,14 @@ func (l *SnowflakeListener) acceptSessions(ln *kcp.Listener) error {
 			0, // default resend
 			1, // nc=1 => congestion window off
 		)
+		if os.Getenv("SNOWFLAKE_TEST_KCP_FAST3MODE") == "1" {
+			conn.SetNoDelay(
+				1,
+				10,
+				2,
+				1,
+			)
+		}
 		go func() {
 			defer conn.Close()
 			err := l.acceptStreams(conn)
