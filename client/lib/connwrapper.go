@@ -9,6 +9,14 @@ import (
 
 var errENOSYS = errors.New("not implemented")
 
+func newPacketConnWrapper(localAddr, remoteAddr net.Addr, rw io.ReadWriter) net.PacketConn {
+	return &packetConnWrapper{
+		ReadWriter: rw,
+		remoteAddr: remoteAddr,
+		localAddr:  localAddr,
+	}
+}
+
 type packetConnWrapper struct {
 	io.ReadWriter
 	remoteAddr net.Addr

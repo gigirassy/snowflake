@@ -344,11 +344,8 @@ func newSession(snowflakes SnowflakeCollector, clientIDCandid turbotunnel.Client
 			return nil, errors.New("handler: Received invalid Snowflake")
 		}
 		log.Println("---- Handler: snowflake assigned ----")
-		packetConnWrapper := &packetConnWrapper{
-			ReadWriter: conn,
-			remoteAddr: dummyAddr{},
-			localAddr:  dummyAddr{},
-		}
+
+		packetConnWrapper := newPacketConnWrapper(dummyAddr{}, dummyAddr{}, conn)
 		return packetConnWrapper, nil
 	}
 	pconn := turbotunnel.NewRedialPacketConn(dummyAddr{}, dummyAddr{}, dialContext)
