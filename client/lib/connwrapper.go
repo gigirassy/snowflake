@@ -9,16 +9,16 @@ import (
 
 var errENOSYS = errors.New("not implemented")
 
-func newPacketConnWrapper(localAddr, remoteAddr net.Addr, rw io.ReadWriter) net.PacketConn {
+func newPacketConnWrapper(localAddr, remoteAddr net.Addr, rwc io.ReadWriteCloser) net.PacketConn {
 	return &packetConnWrapper{
-		ReadWriter: rw,
-		remoteAddr: remoteAddr,
-		localAddr:  localAddr,
+		ReadWriteCloser: rwc,
+		remoteAddr:      remoteAddr,
+		localAddr:       localAddr,
 	}
 }
 
 type packetConnWrapper struct {
-	io.ReadWriter
+	io.ReadWriteCloser
 	remoteAddr net.Addr
 	localAddr  net.Addr
 }
@@ -36,7 +36,7 @@ func (pcw *packetConnWrapper) WriteTo(p []byte, addr net.Addr) (n int, err error
 }
 
 func (pcw *packetConnWrapper) Close() error {
-	return nil
+	return pcw.ReadWriteCloser.Close()
 }
 
 func (pcw *packetConnWrapper) LocalAddr() net.Addr {
