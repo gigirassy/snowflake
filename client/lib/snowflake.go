@@ -345,7 +345,7 @@ func newSession(snowflakes SnowflakeCollector, clientIDCandid turbotunnel.Client
 		}
 		log.Println("---- Handler: snowflake assigned ----")
 
-		packetConnWrapper := newPacketConnWrapper(dummyAddr{}, dummyAddr{}, conn)
+		packetConnWrapper := newPacketConnWrapper(dummyAddr{}, dummyAddr{}, ConfirmsReadWriteCloserPreservesMessageBoundary(conn))
 		return packetConnWrapper, nil
 	}
 	pconn := turbotunnel.NewRedialPacketConn(dummyAddr{}, dummyAddr{}, dialContext)

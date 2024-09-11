@@ -7,18 +7,33 @@ import (
 	"time"
 )
 
+type ReadWriteCloserPreservesBoundary interface {
+	io.ReadWriteCloser
+	MessageBoundaryPreserved()
+}
+
+func ConfirmsReadWriteCloserPreservesMessageBoundary(rwc io.ReadWriteCloser) ReadWriteCloserPreservesBoundary {
+	return &messageBoundaryPreservedReadWriteCloser{rwc}
+}
+
+type messageBoundaryPreservedReadWriteCloser struct {
+	io.ReadWriteCloser
+}
+
+func (m *messageBoundaryPreservedReadWriteCloser) MessageBoundaryPreserved() {}
+
 var errENOSYS = errors.New("not implemented")
 
-func newPacketConnWrapper(localAddr, remoteAddr net.Addr, rwc io.ReadWriteCloser) net.PacketConn {
+func newPacketConnWrapper(localAddr, remoteAddr net.Addr, rwc ReadWriteCloserPreservesBoundary) net.PacketConn {
 	return &packetConnWrapper{
-		ReadWriteCloser: rwc,
-		remoteAddr:      remoteAddr,
-		localAddr:       localAddr,
+		ReadWriteCloserPreservesBoundary: rwc,
+		remoteAddr:                       remoteAddr,
+		localAddr:                        localAddr,
 	}
 }
 
 type packetConnWrapper struct {
-	io.ReadWriteCloser
+	ReadWriteCloserPreservesBoundary
 	remoteAddr net.Addr
 	localAddr  net.Addr
 }
