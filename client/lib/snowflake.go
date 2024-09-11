@@ -359,7 +359,7 @@ func newSession(snowflakes SnowflakeCollector, clientIDCandid turbotunnel.Client
 		pconn.Close()
 		return nil, nil, err
 	}
-	// Permit coalescing the payloads of consecutive sends.
+	// Disallow coalescing the payloads of consecutive sends.
 	conn.SetStreamMode(false)
 	// Set the maximum send and receive window sizes to a high number
 	// Removes KCP bottlenecks: https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/-/issues/40026
