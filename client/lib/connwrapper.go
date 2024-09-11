@@ -1,10 +1,13 @@
 package snowflake_client
 
 import (
+	"errors"
 	"io"
 	"net"
 	"time"
 )
+
+var errENOSYS = errors.New("not implemented")
 
 type packetConnWrapper struct {
 	io.ReadWriter
@@ -33,13 +36,13 @@ func (pcw *packetConnWrapper) LocalAddr() net.Addr {
 }
 
 func (pcw *packetConnWrapper) SetDeadline(t time.Time) error {
-	return nil
+	return errENOSYS
 }
 
 func (pcw *packetConnWrapper) SetReadDeadline(t time.Time) error {
-	return nil
+	return errENOSYS
 }
 
 func (pcw *packetConnWrapper) SetWriteDeadline(t time.Time) error {
-	return nil
+	return errENOSYS
 }
