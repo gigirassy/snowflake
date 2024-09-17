@@ -5,6 +5,7 @@ package messages
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/bridgefingerprint"
@@ -148,4 +149,32 @@ func DecodeClientPollResponse(data []byte) (*ClientPollResponse, error) {
 	}
 
 	return &message, nil
+}
+
+type ClientConnectionMetadata struct {
+	ClientID string `json:"client_id"`
+}
+
+func (meta *ClientConnectionMetadata) EncodeConnectionMetadata() (string, error) {
+	jsonData, err := json.Marshal(meta)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.RawURLEncoding.EncodeToString(jsonData), nil
+}
+
+func DecodeConnectionMetadata(data string) (*ClientConnectionMetadata, error) {
+	decodedData, err := base64.RawURLEncoding.DecodeString(data)
+	if err != nil {
+		return nil, err
+	}
+
+	var meta ClientConnectionMetadata
+	err = json.Unmarshal(decodedData, &meta)
+	if err != nil {
+		return nil, err
+	}
+
+	return &meta, nil
 }
