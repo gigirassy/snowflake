@@ -45,7 +45,7 @@ type webRTCConn struct {
 	protocol string
 }
 
-func newWebRTCConn(pc *webrtc.PeerConnection, dc *webrtc.DataChannel, pr *io.PipeReader, bytesLogger bytesLogger) *webRTCConn {
+func newWebRTCConn(pc *webrtc.PeerConnection, dc *webrtc.DataChannel, pr *io.PipeReader, bytesLogger bytesLogger, protocol string) *webRTCConn {
 	conn := &webRTCConn{pc: pc, dc: dc, pr: pr, bytesLogger: bytesLogger}
 	conn.isClosing = false
 	conn.activity = make(chan struct{}, 100)
@@ -53,6 +53,7 @@ func newWebRTCConn(pc *webrtc.PeerConnection, dc *webrtc.DataChannel, pr *io.Pip
 	conn.inactivityTimeout = 30 * time.Second
 	ctx, cancel := context.WithCancel(context.Background())
 	conn.cancelTimeoutLoop = cancel
+	conn.protocol = protocol
 	go conn.timeoutLoop(ctx)
 	return conn
 }
@@ -137,10 +138,6 @@ func (c *webRTCConn) SetReadDeadline(t time.Time) error {
 func (c *webRTCConn) SetWriteDeadline(t time.Time) error {
 	// nolint: golint
 	return fmt.Errorf("SetWriteDeadline not implemented")
-}
-
-func (c *webRTCConn) SetConnectionProtocol(protocol string) {
-	c.protocol = protocol
 }
 
 func (c *webRTCConn) GetConnectionProtocol() string {

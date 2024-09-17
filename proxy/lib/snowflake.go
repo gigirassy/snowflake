@@ -461,8 +461,7 @@ func (sf *SnowflakeProxy) makePeerConnectionFromOffer(
 		close(dataChan)
 
 		pr, pw := io.Pipe()
-		conn := newWebRTCConn(pc, dc, pr, sf.bytesLogger)
-		conn.SetConnectionProtocol(dc.Protocol())
+		conn := newWebRTCConn(pc, dc, pr, sf.bytesLogger, dc.Protocol())
 
 		dc.SetBufferedAmountLowThreshold(bufferedAmountLowThreshold)
 
