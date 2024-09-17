@@ -375,7 +375,7 @@ func connectToRelay(
 		log.Printf("no remote address given in websocket")
 	}
 
-	if webrtcConnProtocol != "" {
+	{
 		q := u.Query()
 		q.Set("protocol", webrtcConnProtocol)
 		u.RawQuery = q.Encode()
