@@ -50,35 +50,35 @@ type WebRTCPeer struct {
 }
 
 // Deprecated: Use NewWebRTCPeerWithNatPolicyAndEventsAndProxy Instead.
-func NewWebRTCPeer(
+func newWebRTCPeer(
 	config *webrtc.Configuration, broker *BrokerChannel,
 ) (*WebRTCPeer, error) {
-	return NewWebRTCPeerWithNatPolicyAndEventsAndProxy(
+	return newWebRTCPeerWithNatPolicyAndEventsAndProxy(
 		config, broker, nil, nil, nil,
 	)
 }
 
 // Deprecated: Use NewWebRTCPeerWithNatPolicyAndEventsAndProxy Instead.
-func NewWebRTCPeerWithEvents(
+func newWebRTCPeerWithEvents(
 	config *webrtc.Configuration, broker *BrokerChannel,
 	eventsLogger event.SnowflakeEventReceiver,
 ) (*WebRTCPeer, error) {
-	return NewWebRTCPeerWithNatPolicyAndEventsAndProxy(
+	return newWebRTCPeerWithNatPolicyAndEventsAndProxy(
 		config, broker, nil, eventsLogger, nil,
 	)
 }
 
 // Deprecated: Use NewWebRTCPeerWithNatPolicyAndEventsAndProxy Instead.
-func NewWebRTCPeerWithEventsAndProxy(
+func newWebRTCPeerWithEventsAndProxy(
 	config *webrtc.Configuration, broker *BrokerChannel,
 	eventsLogger event.SnowflakeEventReceiver, proxy *url.URL,
 ) (*WebRTCPeer, error) {
-	return NewWebRTCPeerWithNatPolicyAndEventsAndProxy(
+	return newWebRTCPeerWithNatPolicyAndEventsAndProxy(
 		config, broker, nil, eventsLogger, proxy,
 	)
 }
 
-func NewWebRTCPeerWithNatPolicyAndEventsAndProxy(
+func newWebRTCPeerWithNatPolicyAndEventsAndProxy(
 	config *webrtc.Configuration,
 	broker *BrokerChannel, natPolicy *NATPolicy, eventsLogger event.SnowflakeEventReceiver, proxy *url.URL,
 ) (*WebRTCPeer, error) {
