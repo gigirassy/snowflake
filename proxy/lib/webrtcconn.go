@@ -42,6 +42,9 @@ type webRTCConn struct {
 
 	bytesLogger bytesLogger
 
+	// protocol reflect the protocol field in the channel opening
+	// message of Data Channel Establishment Protocol.
+	// In snowflake it is used to transmit connection metadata.
 	protocol string
 }
 
