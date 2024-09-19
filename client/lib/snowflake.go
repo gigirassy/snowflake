@@ -330,9 +330,12 @@ func parseIceServers(addresses []string) []webrtc.ICEServer {
 func newSession(snowflakes SnowflakeCollector) (net.PacketConn, *smux.Session, error) {
 	// We build a persistent KCP session on a sequence of ephemeral WebRTC
 	// connections. This dialContext tells RedialPacketConn how to get a new
-	// WebRTC connection when the previous one dies. Inside each WebRTC
-	// connection, we use encapsulationPacketConn to encode packets into a
+	// WebRTC connection when the previous one dies.
+	// If Stream based transport are used, inside each WebRTC connection,
+	// we use encapsulationPacketConn to encode packets into a
 	// stream.
+	// If Packet based transport are used, inside each WebRTC connection,
+	// packets are sent directly over unreliable data channel.
 	dialContext := func(ctx context.Context) (net.PacketConn, error) {
 		log.Printf("redialing on same connection")
 		// Obtain an available WebRTC remote. May block.
