@@ -172,6 +172,25 @@ func isRemoteAddress(ip net.IP) bool {
 	return !(util.IsLocal(ip) || ip.IsUnspecified() || ip.IsLoopback())
 }
 
+// Checks whether the hostname is local
+func isHostnameLocal(hostname string) bool {
+	// Per https://en.wikipedia.org/wiki/Special-use_domain_name
+	tlds := []string{
+		".internal",
+		".invalid",
+		".local",
+		".localhost",
+		".onion",
+		".test",
+	}
+	for _, tld := range tlds {
+		if strings.HasSuffix(hostname, tld) {
+			return true
+		}
+	}
+	return hostname == "localhost"
+}
+
 func genSessionID() string {
 	buf := make([]byte, sessionIDLength)
 	_, err := rand.Read(buf)
@@ -670,7 +689,11 @@ func checkIsRelayURLAcceptable(
 		return fmt.Errorf("bad Relay URL %w", err)
 	}
 	if !allowPrivateIPs {
-		ip := net.ParseIP(parsedRelayURL.Hostname())
+		hostname := parsedRelayURL.Hostname()
+		if isHostnameLocal(hostname) {
+			return fmt.Errorf("rejected Relay URL: private hostnames are not allowed")
+		}
+		ip := net.ParseIP(hostname)
 		// Otherwise it's a domain name, or an invalid IP.
 		if ip != nil {
 			// We should probably use a ready library for this.
