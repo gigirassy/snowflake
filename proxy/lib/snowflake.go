@@ -32,7 +32,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	mathRand "math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -692,7 +691,6 @@ func checkIsRelayURLAcceptable(
 	if !allowPrivateIPs {
 		hostname := parsedRelayURL.Hostname()
 		ipArray, _ := net.LookupIP(hostname)
-		time.Sleep(time.Second * time.Duration(mathRand.Float64()))
 		if isHostnameLocal(hostname) {
 			return fmt.Errorf("rejected Relay URL: private hostnames are not allowed")
 		}
