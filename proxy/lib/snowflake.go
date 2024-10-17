@@ -674,15 +674,6 @@ func checkIsRelayURLAcceptable(
 		if util.IsHostnameLocal(hostname) {
 			return fmt.Errorf("rejected Relay URL: private hostnames are not allowed")
 		}
-		ipArray, err := net.LookupIP(hostname)
-		if err != nil {
-			return fmt.Errorf("Could not look up IP")
-		}
-		for _, ip := range ipArray {
-			if !isRemoteAddress(ip) {
-				return fmt.Errorf("rejected Relay URL: private IPs are not allowed")
-			}
-		}
 		ip := net.ParseIP(hostname)
 		// Otherwise it's a domain name, or an invalid IP.
 		if ip != nil {
@@ -691,8 +682,16 @@ func checkIsRelayURLAcceptable(
 				return fmt.Errorf("rejected Relay URL: private IPs are not allowed")
 			}
 		} else {
-            // move net.LookupIP(hostname) and isRemoteAddress checks here
-        }
+			ipArray, err := net.LookupIP(hostname)
+			if err != nil {
+				return fmt.Errorf("Could not look up IP")
+			}
+			for _, ip := range ipArray {
+				if !isRemoteAddress(ip) {
+					return fmt.Errorf("rejected Relay URL: private IPs are not allowed")
+				}
+			}
+		}
 	}
 	if !allowNonTLSRelay && parsedRelayURL.Scheme != "wss" {
 		return fmt.Errorf("rejected Relay URL protocol: non-TLS not allowed")
