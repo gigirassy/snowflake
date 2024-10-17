@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"slices"
 	"sort"
+	"strings"
 
 	"github.com/pion/ice/v2"
 	"github.com/pion/sdp/v3"
@@ -164,4 +165,23 @@ func GetCandidateAddrs(sdpStr string) []net.IP {
 		}
 	}
 	return sortedIpAddr
+}
+
+// Checks whether the hostname is local
+func IsHostnameLocal(hostname string) bool {
+	// Per https://en.wikipedia.org/wiki/Special-use_domain_name
+	tlds := []string{
+		".internal",
+		".invalid",
+		".local",
+		".localhost",
+		".onion",
+		".test",
+	}
+	for _, tld := range tlds {
+		if strings.HasSuffix(hostname, tld) {
+			return true
+		}
+	}
+	return hostname == "localhost"
 }
