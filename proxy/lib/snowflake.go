@@ -693,7 +693,10 @@ func checkIsRelayURLAcceptable(
 		if isHostnameLocal(hostname) {
 			return fmt.Errorf("rejected Relay URL: private hostnames are not allowed")
 		}
-		ipArray, _ := net.LookupIP(hostname)
+		ipArray, err := net.LookupIP(hostname)
+		if err != nil {
+			return fmt.Errorf("Could not look up IP")
+		}
 		for _, ip := range ipArray {
 			if !isRemoteAddress(ip) {
 				return fmt.Errorf("rejected Relay URL: private IPs are not allowed")
