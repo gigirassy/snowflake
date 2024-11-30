@@ -1,6 +1,6 @@
 module gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2
 
-go 1.21
+go 1.22
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.32.2
@@ -10,6 +10,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/miekg/dns v1.1.62
+	github.com/pion/dtls/v3 v3.0.4
 	github.com/pion/ice/v4 v4.0.3
 	github.com/pion/sdp/v3 v3.0.9
 	github.com/pion/stun/v3 v3.0.0
@@ -20,6 +21,7 @@ require (
 	github.com/refraction-networking/utls v1.6.7
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.10.0
+	github.com/theodorsm/covert-dtls v0.0.2-0.20241201194039-050c26fb1e5f
 	github.com/txthinking/socks5 v0.0.0-20230325130024-4230056ae301
 	github.com/xtaci/kcp-go/v5 v5.6.8
 	github.com/xtaci/smux v1.5.31
@@ -56,7 +58,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pion/datachannel v1.5.9 // indirect
-	github.com/pion/dtls/v3 v3.0.4 // indirect
 	github.com/pion/interceptor v0.1.37 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/mdns/v2 v2.0.7 // indirect
