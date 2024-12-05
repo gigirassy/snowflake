@@ -42,8 +42,11 @@ import (
 	"github.com/pion/ice/v4"
 
 	"github.com/gorilla/websocket"
+	"github.com/pion/dtls/v3"
 	"github.com/pion/transport/v3/stdnet"
 	"github.com/pion/webrtc/v4"
+	"github.com/theodorsm/covert-dtls/pkg/mimicry"
+	"github.com/theodorsm/covert-dtls/pkg/randomize"
 
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/messages"
@@ -166,6 +169,9 @@ type SnowflakeProxy struct {
 
 	periodicProxyStats *periodicProxyStats
 	bytesLogger        bytesLogger
+
+	DTLSRandomize bool
+	DTLSMimic     bool
 }
 
 // Checks whether an IP address is a remote address for the client
@@ -423,6 +429,23 @@ func (sf *SnowflakeProxy) makeWebRTCAPI() *webrtc.API {
 	settingsEngine.SetICEMulticastDNSMode(ice.MulticastDNSModeDisabled)
 
 	settingsEngine.SetDTLSInsecureSkipHelloVerify(true)
+
+	if sf.DTLSRandomize {
+		rand := randomize.RandomizedMessageClientHello{RandomALPN: true}
+		settingsEngine.SetDTLSClientHelloMessageHook(rand.Hook)
+	} else if sf.DTLSMimic {
+		mimic := &mimicry.MimickedClientHello{}
+		profiles := []dtls.SRTPProtectionProfile{
+			dtls.SRTP_AES128_CM_HMAC_SHA1_80,
+			dtls.SRTP_AES128_CM_HMAC_SHA1_32,
+			dtls.SRTP_AEAD_AES_128_GCM,
+			dtls.SRTP_AEAD_AES_256_GCM,
+			dtls.SRTP_AES256_CM_SHA1_32,
+			dtls.SRTP_AES256_CM_SHA1_80,
+		}
+		settingsEngine.SetSRTPProtectionProfiles(profiles...)
+		settingsEngine.SetDTLSClientHelloMessageHook(mimic.Hook)
+	}
 
 	return webrtc.NewAPI(webrtc.WithSettingEngine(settingsEngine))
 }

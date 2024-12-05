@@ -174,6 +174,8 @@ func main() {
 	max := flag.Int("max", DefaultSnowflakeCapacity,
 		"capacity for number of multiplexed WebRTC peers")
 	versionFlag := flag.Bool("version", false, "display version info to stderr and quit")
+	dtlsRandomize := flag.Bool("dtls-randomize", false, "randomize DTLS client hello")
+	dtlsMimic := flag.Bool("dtls-mimic", false, "mimic DTLS client hello of Chrome and Firefox")
 
 	// Deprecated
 	oldLogToStateDir := flag.Bool("logToStateDir", false, "use -log-to-state-dir instead")
@@ -184,6 +186,10 @@ func main() {
 	if *versionFlag {
 		fmt.Fprintf(os.Stderr, "snowflake-client %s", version.ConstructResult())
 		os.Exit(0)
+	}
+
+	if *dtlsMimic && *dtlsRandomize {
+		log.Fatal("Cannot both Randomize and Mimic DTLS client hello")
 	}
 
 	log.SetFlags(log.LstdFlags | log.LUTC)
@@ -240,6 +246,8 @@ func main() {
 		ICEAddresses:       iceAddresses,
 		KeepLocalAddresses: *keepLocalAddresses || *oldKeepLocalAddresses,
 		Max:                *max,
+		DTLSRandomize:      *dtlsRandomize,
+		DTLSMimic:          *dtlsMimic,
 	}
 
 	// Begin goptlib client process.

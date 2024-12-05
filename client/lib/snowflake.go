@@ -118,6 +118,8 @@ type ClientConfig struct {
 	BridgeFingerprint string
 	// CommunicationProxy is the proxy address for network communication
 	CommunicationProxy *url.URL
+	DTLSRandomize      bool
+	DTLSMimic          bool
 }
 
 // NewSnowflakeClient creates a new Snowflake transport client that can spawn multiple
@@ -161,7 +163,7 @@ func NewSnowflakeClient(config ClientConfig) (*Transport, error) {
 		max = config.Max
 	}
 	eventsLogger := event.NewSnowflakeEventDispatcher()
-	transport := &Transport{dialer: NewWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy), eventDispatcher: eventsLogger}
+	transport := &Transport{dialer: NewWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy, config.DTLSRandomize, config.DTLSMimic), eventDispatcher: eventsLogger}
 
 	return transport, nil
 }

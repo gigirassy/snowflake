@@ -11,10 +11,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pion/dtls/v3"
 	"github.com/pion/ice/v4"
 	"github.com/pion/transport/v3"
 	"github.com/pion/transport/v3/stdnet"
 	"github.com/pion/webrtc/v4"
+	"github.com/theodorsm/covert-dtls/pkg/mimicry"
+	"github.com/theodorsm/covert-dtls/pkg/randomize"
 
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/proxy"
@@ -49,7 +52,7 @@ type WebRTCPeer struct {
 func NewWebRTCPeer(
 	config *webrtc.Configuration, broker *BrokerChannel,
 ) (*WebRTCPeer, error) {
-	return NewWebRTCPeerWithEventsAndProxy(config, broker, nil, nil)
+	return NewWebRTCPeerWithEventsAndProxy(config, broker, nil, nil, false, false)
 }
 
 // Deprecated: Use NewWebRTCPeerWithEventsAndProxy Instead.
@@ -57,7 +60,7 @@ func NewWebRTCPeerWithEvents(
 	config *webrtc.Configuration, broker *BrokerChannel,
 	eventsLogger event.SnowflakeEventReceiver,
 ) (*WebRTCPeer, error) {
-	return NewWebRTCPeerWithEventsAndProxy(config, broker, eventsLogger, nil)
+	return NewWebRTCPeerWithEventsAndProxy(config, broker, eventsLogger, nil, false, false)
 }
 
 // NewWebRTCPeerWithEventsAndProxy constructs a WebRTC PeerConnection to a snowflake proxy.
@@ -68,6 +71,7 @@ func NewWebRTCPeerWithEvents(
 func NewWebRTCPeerWithEventsAndProxy(
 	config *webrtc.Configuration, broker *BrokerChannel,
 	eventsLogger event.SnowflakeEventReceiver, proxy *url.URL,
+	dtlsRandomize bool, dtlsMimic bool,
 ) (*WebRTCPeer, error) {
 	if eventsLogger == nil {
 		eventsLogger = event.NewSnowflakeEventDispatcher()
@@ -92,7 +96,7 @@ func NewWebRTCPeerWithEventsAndProxy(
 	connection.eventsLogger = eventsLogger
 	connection.proxy = proxy
 
-	err := connection.connect(config, broker)
+	err := connection.connect(config, broker, dtlsRandomize, dtlsMimic)
 	if err != nil {
 		connection.Close()
 		return nil, err
@@ -166,10 +170,9 @@ func (c *WebRTCPeer) checkForStaleness(timeout time.Duration) {
 
 // connect does the bulk of the work: gather ICE candidates, send the SDP offer to broker,
 // receive an answer from broker, and wait for data channel to open
-func (c *WebRTCPeer) connect(config *webrtc.Configuration, broker *BrokerChannel) error {
+func (c *WebRTCPeer) connect(config *webrtc.Configuration, broker *BrokerChannel, dtlsRandomize bool, dtlsMimic bool) error {
 	log.Println(c.id, " connecting...")
-
-	err := c.preparePeerConnection(config, broker.keepLocalAddresses)
+	err := c.preparePeerConnection(config, broker.keepLocalAddresses, dtlsRandomize, dtlsMimic)
 	localDescription := c.pc.LocalDescription()
 	c.eventsLogger.OnNewSnowflakeEvent(event.EventOnOfferCreated{
 		WebRTCLocalDescription: localDescription,
@@ -213,6 +216,8 @@ func (c *WebRTCPeer) connect(config *webrtc.Configuration, broker *BrokerChannel
 func (c *WebRTCPeer) preparePeerConnection(
 	config *webrtc.Configuration,
 	keepLocalAddresses bool,
+	dtlsRandomize bool,
+	dtlsMimic bool,
 ) error {
 	var err error
 	s := webrtc.SettingEngine{}
@@ -245,6 +250,24 @@ func (c *WebRTCPeer) preparePeerConnection(
 	}
 
 	s.SetNet(vnet)
+
+	if dtlsRandomize {
+		rand := randomize.RandomizedMessageClientHello{RandomALPN: true}
+		s.SetDTLSClientHelloMessageHook(rand.Hook)
+	} else if dtlsMimic {
+		mimic := &mimicry.MimickedClientHello{}
+		profiles := []dtls.SRTPProtectionProfile{
+			dtls.SRTP_AES128_CM_HMAC_SHA1_80,
+			dtls.SRTP_AES128_CM_HMAC_SHA1_32,
+			dtls.SRTP_AEAD_AES_128_GCM,
+			dtls.SRTP_AEAD_AES_256_GCM,
+			dtls.SRTP_AES256_CM_SHA1_32,
+			dtls.SRTP_AES256_CM_SHA1_80,
+		}
+		s.SetSRTPProtectionProfiles(profiles...)
+		s.SetDTLSClientHelloMessageHook(mimic.Hook)
+	}
+
 	api := webrtc.NewAPI(webrtc.WithSettingEngine(s))
 	c.pc, err = api.NewPeerConnection(*config)
 	if err != nil {

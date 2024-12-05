@@ -48,6 +48,10 @@ Usage of ./proxy:
         maximum concurrent clients (default is to accept an unlimited number of clients)
   -disable-stats-logger
         disable the exposing mechanism for stats using logs
+  -dtls-mimic
+    	mimic DTLS client hello of Chrome and Firefox
+  -dtls-randomize
+    	randomize DTLS client hello
   -ephemeral-ports-range range
         Set the range of ports used for client connections (format:"<min>:<max>").
         If omitted, the ports will be chosen automatically.
