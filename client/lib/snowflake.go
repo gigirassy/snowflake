@@ -162,8 +162,14 @@ func NewSnowflakeClient(config ClientConfig) (*Transport, error) {
 	if config.Max > max {
 		max = config.Max
 	}
+
 	eventsLogger := event.NewSnowflakeEventDispatcher()
-	transport := &Transport{dialer: NewWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy, config.DTLSRandomize, config.DTLSMimic), eventDispatcher: eventsLogger}
+	var transport *Transport
+	if config.DTLSRandomize || config.DTLSMimic {
+		transport = &Transport{dialer: NewCovertWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy, config.DTLSRandomize, config.DTLSMimic), eventDispatcher: eventsLogger}
+	} else {
+		transport = &Transport{dialer: NewWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy), eventDispatcher: eventsLogger}
+	}
 
 	return transport, nil
 }

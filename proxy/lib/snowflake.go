@@ -42,7 +42,6 @@ import (
 	"github.com/pion/ice/v4"
 
 	"github.com/gorilla/websocket"
-	"github.com/pion/dtls/v3"
 	"github.com/pion/transport/v3/stdnet"
 	"github.com/pion/webrtc/v4"
 	"github.com/theodorsm/covert-dtls/pkg/mimicry"

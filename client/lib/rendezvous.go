@@ -185,16 +185,34 @@ type WebRTCDialer struct {
 
 // Deprecated: Use NewWebRTCDialerWithEventsAndProxy instead
 func NewWebRTCDialer(broker *BrokerChannel, iceServers []webrtc.ICEServer, max int) *WebRTCDialer {
-	return NewWebRTCDialerWithEventsAndProxy(broker, iceServers, max, nil, nil, false, false)
+	return NewWebRTCDialerWithEventsAndProxy(broker, iceServers, max, nil, nil)
 }
 
 // Deprecated: Use NewWebRTCDialerWithEventsAndProxy instead
 func NewWebRTCDialerWithEvents(broker *BrokerChannel, iceServers []webrtc.ICEServer, max int, eventLogger event.SnowflakeEventReceiver) *WebRTCDialer {
-	return NewWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventLogger, nil, false, false)
+	return NewWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventLogger, nil)
 }
 
 // NewWebRTCDialerWithEventsAndProxy constructs a new WebRTCDialer.
 func NewWebRTCDialerWithEventsAndProxy(broker *BrokerChannel, iceServers []webrtc.ICEServer, max int,
+	eventLogger event.SnowflakeEventReceiver, proxy *url.URL,
+) *WebRTCDialer {
+	config := webrtc.Configuration{
+		ICEServers: iceServers,
+	}
+
+	return &WebRTCDialer{
+		BrokerChannel: broker,
+		webrtcConfig:  &config,
+		max:           max,
+
+		eventLogger: eventLogger,
+		proxy:       proxy,
+	}
+}
+
+// NewWebRTCDialerWithEventsAndProxy constructs a new WebRTCDialer setting DTLS mimicking and randomization.
+func NewCovertWebRTCDialerWithEventsAndProxy(broker *BrokerChannel, iceServers []webrtc.ICEServer, max int,
 	eventLogger event.SnowflakeEventReceiver, proxy *url.URL,
 	dtlsRandomize bool, dtlsMimic bool,
 ) *WebRTCDialer {
@@ -218,7 +236,10 @@ func NewWebRTCDialerWithEventsAndProxy(broker *BrokerChannel, iceServers []webrt
 func (w WebRTCDialer) Catch() (*WebRTCPeer, error) {
 	// TODO: [#25591] Fetch ICE server information from Broker.
 	// TODO: [#25596] Consider TURN servers here too.
-	return NewWebRTCPeerWithEventsAndProxy(w.webrtcConfig, w.BrokerChannel, w.eventLogger, w.proxy, w.dtlsRandomize, w.dtlsMimic)
+	if w.dtlsRandomize || w.dtlsMimic {
+		return NewCovertWebRTCPeerWithEventsAndProxy(w.webrtcConfig, w.BrokerChannel, w.eventLogger, w.proxy, w.dtlsRandomize, w.dtlsMimic)
+	}
+	return NewWebRTCPeerWithEventsAndProxy(w.webrtcConfig, w.BrokerChannel, w.eventLogger, w.proxy)
 }
 
 // GetMax returns the maximum number of snowflakes to collect.

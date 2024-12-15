@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pion/dtls/v3"
 	"github.com/pion/ice/v4"
 	"github.com/pion/transport/v3"
 	"github.com/pion/transport/v3/stdnet"
@@ -53,7 +52,7 @@ type WebRTCPeer struct {
 func NewWebRTCPeer(
 	config *webrtc.Configuration, broker *BrokerChannel,
 ) (*WebRTCPeer, error) {
-	return NewWebRTCPeerWithEventsAndProxy(config, broker, nil, nil, false, false)
+	return NewWebRTCPeerWithEventsAndProxy(config, broker, nil, nil)
 }
 
 // Deprecated: Use NewWebRTCPeerWithEventsAndProxy Instead.
@@ -61,7 +60,7 @@ func NewWebRTCPeerWithEvents(
 	config *webrtc.Configuration, broker *BrokerChannel,
 	eventsLogger event.SnowflakeEventReceiver,
 ) (*WebRTCPeer, error) {
-	return NewWebRTCPeerWithEventsAndProxy(config, broker, eventsLogger, nil, false, false)
+	return NewWebRTCPeerWithEventsAndProxy(config, broker, eventsLogger, nil)
 }
 
 // NewWebRTCPeerWithEventsAndProxy constructs a WebRTC PeerConnection to a snowflake proxy.
@@ -70,6 +69,42 @@ func NewWebRTCPeerWithEvents(
 // the exchange of SDP information, the creation of a PeerConnection, and the establishment
 // of a DataChannel to the Snowflake proxy.
 func NewWebRTCPeerWithEventsAndProxy(
+	config *webrtc.Configuration, broker *BrokerChannel,
+	eventsLogger event.SnowflakeEventReceiver, proxy *url.URL,
+) (*WebRTCPeer, error) {
+	if eventsLogger == nil {
+		eventsLogger = event.NewSnowflakeEventDispatcher()
+	}
+
+	connection := new(WebRTCPeer)
+	{
+		var buf [8]byte
+		if _, err := rand.Read(buf[:]); err != nil {
+			panic(err)
+		}
+		connection.id = "snowflake-" + hex.EncodeToString(buf[:])
+	}
+	connection.closed = make(chan struct{})
+
+	// Override with something that's not NullLogger to have real logging.
+	connection.bytesLogger = &bytesNullLogger{}
+
+	// Pipes remain the same even when DataChannel gets switched.
+	connection.recvPipe, connection.writePipe = io.Pipe()
+
+	connection.eventsLogger = eventsLogger
+	connection.proxy = proxy
+
+	err := connection.connect(config, broker, false, false)
+	if err != nil {
+		connection.Close()
+		return nil, err
+	}
+	return connection, nil
+}
+
+// NewCovertWebRTCPeerWithEventsAndProxy constructs a WebRTC PeerConnection to a snowflake proxy using DTLS mimicking or randomization.
+func NewCovertWebRTCPeerWithEventsAndProxy(
 	config *webrtc.Configuration, broker *BrokerChannel,
 	eventsLogger event.SnowflakeEventReceiver, proxy *url.URL,
 	dtlsRandomize bool, dtlsMimic bool,
