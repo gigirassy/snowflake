@@ -21,7 +21,7 @@ require (
 	github.com/refraction-networking/utls v1.6.7
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.10.0
-	github.com/theodorsm/covert-dtls v0.0.2-0.20241201194039-050c26fb1e5f
+	github.com/theodorsm/covert-dtls v0.0.2-0.20241215210721-995fe9f65413
 	github.com/txthinking/socks5 v0.0.0-20230325130024-4230056ae301
 	github.com/xtaci/kcp-go/v5 v5.6.8
 	github.com/xtaci/smux v1.5.31

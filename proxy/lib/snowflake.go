@@ -30,7 +30,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"github.com/pion/ice/v4"
 	"io"
 	"log"
 	"net"
@@ -40,12 +39,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pion/ice/v4"
+
 	"github.com/gorilla/websocket"
 	"github.com/pion/dtls/v3"
 	"github.com/pion/transport/v3/stdnet"
 	"github.com/pion/webrtc/v4"
 	"github.com/theodorsm/covert-dtls/pkg/mimicry"
 	"github.com/theodorsm/covert-dtls/pkg/randomize"
+	"github.com/theodorsm/covert-dtls/pkg/utils"
 
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/messages"
@@ -434,14 +436,7 @@ func (sf *SnowflakeProxy) makeWebRTCAPI() *webrtc.API {
 		settingsEngine.SetDTLSClientHelloMessageHook(rand.Hook)
 	} else if sf.DTLSMimic {
 		mimic := &mimicry.MimickedClientHello{}
-		profiles := []dtls.SRTPProtectionProfile{
-			dtls.SRTP_AES128_CM_HMAC_SHA1_80,
-			dtls.SRTP_AES128_CM_HMAC_SHA1_32,
-			dtls.SRTP_AEAD_AES_128_GCM,
-			dtls.SRTP_AEAD_AES_256_GCM,
-			dtls.SRTP_AES256_CM_SHA1_32,
-			dtls.SRTP_AES256_CM_SHA1_80,
-		}
+		profiles := utils.DefaultSRTPProtectionProfiles()
 		settingsEngine.SetSRTPProtectionProfiles(profiles...)
 		settingsEngine.SetDTLSClientHelloMessageHook(mimic.Hook)
 	}

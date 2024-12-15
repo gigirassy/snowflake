@@ -18,6 +18,7 @@ import (
 	"github.com/pion/webrtc/v4"
 	"github.com/theodorsm/covert-dtls/pkg/mimicry"
 	"github.com/theodorsm/covert-dtls/pkg/randomize"
+	"github.com/theodorsm/covert-dtls/pkg/utils"
 
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/proxy"
@@ -256,14 +257,7 @@ func (c *WebRTCPeer) preparePeerConnection(
 		s.SetDTLSClientHelloMessageHook(rand.Hook)
 	} else if dtlsMimic {
 		mimic := &mimicry.MimickedClientHello{}
-		profiles := []dtls.SRTPProtectionProfile{
-			dtls.SRTP_AES128_CM_HMAC_SHA1_80,
-			dtls.SRTP_AES128_CM_HMAC_SHA1_32,
-			dtls.SRTP_AEAD_AES_128_GCM,
-			dtls.SRTP_AEAD_AES_256_GCM,
-			dtls.SRTP_AES256_CM_SHA1_32,
-			dtls.SRTP_AES256_CM_SHA1_80,
-		}
+		profiles := utils.DefaultSRTPProtectionProfiles()
 		s.SetSRTPProtectionProfiles(profiles...)
 		s.SetDTLSClientHelloMessageHook(mimic.Hook)
 	}
