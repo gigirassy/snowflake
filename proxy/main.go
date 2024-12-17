@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil/safelog"
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/covertdtls"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/version"
 	sf "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/proxy/lib"
@@ -46,8 +47,7 @@ func main() {
 	verboseLogging := flag.Bool("verbose", false, "increase log verbosity")
 	ephemeralPortsRangeFlag := flag.String("ephemeral-ports-range", "", "Set the `range` of ports used for client connections (format:\"<min>:<max>\").\nIf omitted, the ports will be chosen automatically.")
 	versionFlag := flag.Bool("version", false, "display version info to stderr and quit")
-	dtlsRandomize := flag.Bool("dtls-randomize", false, "randomize DTLS client hello")
-	dtlsMimic := flag.Bool("dtls-mimic", false, "mimic DTLS client hello of Chrome and Firefox")
+	covertDTLSConfig := flag.String("covertdtls-config", "", "Configuration of dtls mimicking and randomization: mimic, randomize, randomizemimic")
 
 	var ephemeralPortsRange []uint16 = []uint16{0, 0}
 
@@ -64,10 +64,6 @@ func main() {
 
 	if *outboundAddress != "" && *keepLocalAddresses {
 		log.Fatal("Cannot keep local address candidates when outbound address is specified")
-	}
-
-	if *dtlsMimic && *dtlsRandomize {
-		log.Fatal("Cannot both Randomize and Mimic DTLS client hello")
 	}
 
 	eventLogger := event.NewSnowflakeEventDispatcher()
@@ -117,9 +113,8 @@ func main() {
 		AllowProxyingToPrivateAddresses: *allowProxyingToPrivateAddresses,
 		AllowNonTLSRelay:                *allowNonTLSRelay,
 
-		SummaryInterval: *summaryInterval,
-		DTLSRandomize:   *dtlsRandomize,
-		DTLSMimic:       *dtlsMimic,
+		SummaryInterval:  *summaryInterval,
+		CovertDTLSConfig: covertdtls.ParseConfigString(*covertDTLSConfig),
 	}
 
 	var logOutput = io.Discard

@@ -19,6 +19,7 @@ import (
 	"github.com/theodorsm/covert-dtls/pkg/randomize"
 	"github.com/theodorsm/covert-dtls/pkg/utils"
 
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/covertdtls"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/proxy"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/util"
@@ -95,7 +96,7 @@ func NewWebRTCPeerWithEventsAndProxy(
 	connection.eventsLogger = eventsLogger
 	connection.proxy = proxy
 
-	err := connection.connect(config, broker, false, false)
+	err := connection.connect(config, broker, nil)
 	if err != nil {
 		connection.Close()
 		return nil, err
@@ -107,7 +108,7 @@ func NewWebRTCPeerWithEventsAndProxy(
 func NewCovertWebRTCPeerWithEventsAndProxy(
 	config *webrtc.Configuration, broker *BrokerChannel,
 	eventsLogger event.SnowflakeEventReceiver, proxy *url.URL,
-	dtlsRandomize bool, dtlsMimic bool,
+	covertDTLSConfig *covertdtls.CovertDTLSConfig,
 ) (*WebRTCPeer, error) {
 	if eventsLogger == nil {
 		eventsLogger = event.NewSnowflakeEventDispatcher()
@@ -132,7 +133,7 @@ func NewCovertWebRTCPeerWithEventsAndProxy(
 	connection.eventsLogger = eventsLogger
 	connection.proxy = proxy
 
-	err := connection.connect(config, broker, dtlsRandomize, dtlsMimic)
+	err := connection.connect(config, broker, covertDTLSConfig)
 	if err != nil {
 		connection.Close()
 		return nil, err
@@ -206,9 +207,9 @@ func (c *WebRTCPeer) checkForStaleness(timeout time.Duration) {
 
 // connect does the bulk of the work: gather ICE candidates, send the SDP offer to broker,
 // receive an answer from broker, and wait for data channel to open
-func (c *WebRTCPeer) connect(config *webrtc.Configuration, broker *BrokerChannel, dtlsRandomize bool, dtlsMimic bool) error {
+func (c *WebRTCPeer) connect(config *webrtc.Configuration, broker *BrokerChannel, covertDTLSConfig *covertdtls.CovertDTLSConfig) error {
 	log.Println(c.id, " connecting...")
-	err := c.preparePeerConnection(config, broker.keepLocalAddresses, dtlsRandomize, dtlsMimic)
+	err := c.preparePeerConnection(config, broker.keepLocalAddresses, covertDTLSConfig)
 	localDescription := c.pc.LocalDescription()
 	c.eventsLogger.OnNewSnowflakeEvent(event.EventOnOfferCreated{
 		WebRTCLocalDescription: localDescription,
@@ -252,8 +253,7 @@ func (c *WebRTCPeer) connect(config *webrtc.Configuration, broker *BrokerChannel
 func (c *WebRTCPeer) preparePeerConnection(
 	config *webrtc.Configuration,
 	keepLocalAddresses bool,
-	dtlsRandomize bool,
-	dtlsMimic bool,
+	covertDTLSConfig *covertdtls.CovertDTLSConfig,
 ) error {
 	var err error
 	s := webrtc.SettingEngine{}
@@ -287,14 +287,21 @@ func (c *WebRTCPeer) preparePeerConnection(
 
 	s.SetNet(vnet)
 
-	if dtlsRandomize {
-		rand := randomize.RandomizedMessageClientHello{RandomALPN: true}
-		s.SetDTLSClientHelloMessageHook(rand.Hook)
-	} else if dtlsMimic {
+	if covertDTLSConfig.Mimic {
 		mimic := &mimicry.MimickedClientHello{}
+		if covertDTLSConfig.Randomize {
+			err = mimic.LoadRandomFingerprint()
+			if err != nil {
+				log.Printf("NewPeerConnection ERROR: %s", err)
+				return err
+			}
+		}
 		profiles := utils.DefaultSRTPProtectionProfiles()
 		s.SetSRTPProtectionProfiles(profiles...)
 		s.SetDTLSClientHelloMessageHook(mimic.Hook)
+	} else if covertDTLSConfig.Randomize {
+		rand := randomize.RandomizedMessageClientHello{RandomALPN: true}
+		s.SetDTLSClientHelloMessageHook(rand.Hook)
 	}
 
 	api := webrtc.NewAPI(webrtc.WithSettingEngine(s))

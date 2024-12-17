@@ -48,6 +48,7 @@ import (
 	"github.com/theodorsm/covert-dtls/pkg/randomize"
 	"github.com/theodorsm/covert-dtls/pkg/utils"
 
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/covertdtls"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/messages"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/namematcher"
@@ -170,8 +171,7 @@ type SnowflakeProxy struct {
 	periodicProxyStats *periodicProxyStats
 	bytesLogger        bytesLogger
 
-	DTLSRandomize bool
-	DTLSMimic     bool
+	CovertDTLSConfig covertdtls.CovertDTLSConfig
 }
 
 // Checks whether an IP address is a remote address for the client
@@ -430,14 +430,21 @@ func (sf *SnowflakeProxy) makeWebRTCAPI() *webrtc.API {
 
 	settingsEngine.SetDTLSInsecureSkipHelloVerify(true)
 
-	if sf.DTLSRandomize {
-		rand := randomize.RandomizedMessageClientHello{RandomALPN: true}
-		settingsEngine.SetDTLSClientHelloMessageHook(rand.Hook)
-	} else if sf.DTLSMimic {
+	if sf.CovertDTLSConfig.Mimic {
 		mimic := &mimicry.MimickedClientHello{}
+		if sf.CovertDTLSConfig.Randomize {
+			err := mimic.LoadRandomFingerprint()
+			if err != nil {
+				log.Printf("makeWebRTCAPI ERROR: %s", err)
+				return nil
+			}
+		}
 		profiles := utils.DefaultSRTPProtectionProfiles()
 		settingsEngine.SetSRTPProtectionProfiles(profiles...)
 		settingsEngine.SetDTLSClientHelloMessageHook(mimic.Hook)
+	} else if sf.CovertDTLSConfig.Randomize {
+		rand := randomize.RandomizedMessageClientHello{RandomALPN: true}
+		settingsEngine.SetDTLSClientHelloMessageHook(rand.Hook)
 	}
 
 	return webrtc.NewAPI(webrtc.WithSettingEngine(settingsEngine))

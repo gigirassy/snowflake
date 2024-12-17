@@ -40,6 +40,7 @@ import (
 	"github.com/xtaci/kcp-go/v5"
 	"github.com/xtaci/smux"
 
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/covertdtls"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/nat"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/turbotunnel"
@@ -118,8 +119,7 @@ type ClientConfig struct {
 	BridgeFingerprint string
 	// CommunicationProxy is the proxy address for network communication
 	CommunicationProxy *url.URL
-	DTLSRandomize      bool
-	DTLSMimic          bool
+	CovertDTLSConfig   string
 }
 
 // NewSnowflakeClient creates a new Snowflake transport client that can spawn multiple
@@ -165,8 +165,10 @@ func NewSnowflakeClient(config ClientConfig) (*Transport, error) {
 
 	eventsLogger := event.NewSnowflakeEventDispatcher()
 	var transport *Transport
-	if config.DTLSRandomize || config.DTLSMimic {
-		transport = &Transport{dialer: NewCovertWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy, config.DTLSRandomize, config.DTLSMimic), eventDispatcher: eventsLogger}
+	// TODO: Add fingerprint config
+	if config.CovertDTLSConfig != "" {
+		covertDTLSConfig := covertdtls.ParseConfigString(config.CovertDTLSConfig)
+		transport = &Transport{dialer: NewCovertWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy, &covertDTLSConfig), eventDispatcher: eventsLogger}
 	} else {
 		transport = &Transport{dialer: NewWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy), eventDispatcher: eventsLogger}
 	}

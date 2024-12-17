@@ -17,6 +17,7 @@ import (
 	utls "github.com/refraction-networking/utls"
 
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/certs"
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/covertdtls"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/messages"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/nat"
@@ -177,10 +178,9 @@ type WebRTCDialer struct {
 	webrtcConfig *webrtc.Configuration
 	max          int
 
-	eventLogger   event.SnowflakeEventReceiver
-	proxy         *url.URL
-	dtlsRandomize bool
-	dtlsMimic     bool
+	eventLogger      event.SnowflakeEventReceiver
+	proxy            *url.URL
+	covertDTLSConfig *covertdtls.CovertDTLSConfig
 }
 
 // Deprecated: Use NewWebRTCDialerWithEventsAndProxy instead
@@ -214,7 +214,7 @@ func NewWebRTCDialerWithEventsAndProxy(broker *BrokerChannel, iceServers []webrt
 // NewWebRTCDialerWithEventsAndProxy constructs a new WebRTCDialer setting DTLS mimicking and randomization.
 func NewCovertWebRTCDialerWithEventsAndProxy(broker *BrokerChannel, iceServers []webrtc.ICEServer, max int,
 	eventLogger event.SnowflakeEventReceiver, proxy *url.URL,
-	dtlsRandomize bool, dtlsMimic bool,
+	covertDTLSConfig *covertdtls.CovertDTLSConfig,
 ) *WebRTCDialer {
 	config := webrtc.Configuration{
 		ICEServers: iceServers,
@@ -225,10 +225,9 @@ func NewCovertWebRTCDialerWithEventsAndProxy(broker *BrokerChannel, iceServers [
 		webrtcConfig:  &config,
 		max:           max,
 
-		eventLogger:   eventLogger,
-		proxy:         proxy,
-		dtlsRandomize: dtlsRandomize,
-		dtlsMimic:     dtlsMimic,
+		eventLogger:      eventLogger,
+		proxy:            proxy,
+		covertDTLSConfig: covertDTLSConfig,
 	}
 }
 
@@ -236,8 +235,8 @@ func NewCovertWebRTCDialerWithEventsAndProxy(broker *BrokerChannel, iceServers [
 func (w WebRTCDialer) Catch() (*WebRTCPeer, error) {
 	// TODO: [#25591] Fetch ICE server information from Broker.
 	// TODO: [#25596] Consider TURN servers here too.
-	if w.dtlsRandomize || w.dtlsMimic {
-		return NewCovertWebRTCPeerWithEventsAndProxy(w.webrtcConfig, w.BrokerChannel, w.eventLogger, w.proxy, w.dtlsRandomize, w.dtlsMimic)
+	if w.covertDTLSConfig != nil {
+		return NewCovertWebRTCPeerWithEventsAndProxy(w.webrtcConfig, w.BrokerChannel, w.eventLogger, w.proxy, w.covertDTLSConfig)
 	}
 	return NewWebRTCPeerWithEventsAndProxy(w.webrtcConfig, w.BrokerChannel, w.eventLogger, w.proxy)
 }

@@ -35,7 +35,7 @@ UseBridges 1
 
 ClientTransportPlugin snowflake exec ./client -log snowflake.log
 
-Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ fronts=foursquare.com,github.githubassets.com ice=stun:stun.l.google.com:19302,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
+Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ fronts=foursquare.com,github.githubassets.com ice=stun:stun.l.google.com:19302,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn covertdtls-config=randomizemimic
 ```
 
 `fingerprint=` is the fingerprint of bridge that the client will ultimately be connecting to.
@@ -47,6 +47,8 @@ Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerpri
 `ice=` is a comma-separated list of ICE servers. These must be STUN (over UDP) servers with the form stun:<var>host</var>[:<var>port</var>]. We recommend using servers that have implemented NAT discovery. See our wiki page on [NAT traversal](https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/-/wikis/NAT-matching) for more information.
 
 `utls-imitate=` configuration instructs the client to use fingerprinting resistance when connecting when rendez-vous'ing with the broker.
+
+`covertdtls-config=` configuration for randomization or mimicking (Firefox/Chrome browser) of DTLS Client Hello messages. String can be "randomize", "mimic" or "randomizemimc"  
 
 To bootstrap Tor, run:
 ```

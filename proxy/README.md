@@ -46,10 +46,10 @@ Usage of ./proxy:
         The URL of the broker server that the proxy will be using to find clients (default "https://snowflake-broker.torproject.net/")
   -capacity uint
         maximum concurrent clients (default is to accept an unlimited number of clients)
+  -covertdtls-config string
+    	Configuration of dtls mimicking and randomization: mimic, randomize, randomizemimic
   -disable-stats-logger
         disable the exposing mechanism for stats using logs
-  -dtls-mimic
-    	mimic DTLS client hello of Chrome and Firefox
   -dtls-randomize
     	randomize DTLS client hello
   -ephemeral-ports-range range
