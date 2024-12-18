@@ -52,8 +52,6 @@ Usage of ./proxy:
     	Mimicking of a raw DTLS fingerprint
   -disable-stats-logger
         disable the exposing mechanism for stats using logs
-  -dtls-randomize
-    	randomize DTLS client hello
   -ephemeral-ports-range range
         Set the range of ports used for client connections (format:"<min>:<max>").
         If omitted, the ports will be chosen automatically.
