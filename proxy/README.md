@@ -48,6 +48,8 @@ Usage of ./proxy:
         maximum concurrent clients (default is to accept an unlimited number of clients)
   -covertdtls-config string
     	Configuration of dtls mimicking and randomization: mimic, randomize, randomizemimic
+  -covertdtls-fingerprint string
+    	Mimicking of a raw DTLS fingerprint
   -disable-stats-logger
         disable the exposing mechanism for stats using logs
   -dtls-randomize

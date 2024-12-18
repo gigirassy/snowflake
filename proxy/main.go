@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/theodorsm/covert-dtls/pkg/fingerprints"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil/safelog"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/covertdtls"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
@@ -47,7 +48,8 @@ func main() {
 	verboseLogging := flag.Bool("verbose", false, "increase log verbosity")
 	ephemeralPortsRangeFlag := flag.String("ephemeral-ports-range", "", "Set the `range` of ports used for client connections (format:\"<min>:<max>\").\nIf omitted, the ports will be chosen automatically.")
 	versionFlag := flag.Bool("version", false, "display version info to stderr and quit")
-	covertDTLSConfig := flag.String("covertdtls-config", "", "Configuration of dtls mimicking and randomization: mimic, randomize, randomizemimic")
+	covertDTLSConfig := flag.String("covertdtls-config", "", "Configuration of DTLS mimicking and randomization: mimic, randomize, randomizemimic")
+	covertDTLSfingerprint := flag.String("covertdtls-fingerprint", "", "Mimicking of a raw DTLS fingerprint")
 
 	var ephemeralPortsRange []uint16 = []uint16{0, 0}
 
@@ -94,6 +96,15 @@ func main() {
 		}
 	}
 
+	var cDTLSconfig covertdtls.CovertDTLSConfig
+
+	if *covertDTLSConfig != "" {
+		cDTLSconfig = covertdtls.ParseConfigString(*covertDTLSConfig)
+	}
+	if *covertDTLSfingerprint != "" {
+		cDTLSconfig.Fingerprint = fingerprints.ClientHelloFingerprint(*covertDTLSfingerprint)
+	}
+
 	proxy := sf.SnowflakeProxy{
 		PollInterval:       *pollInterval,
 		Capacity:           uint(*capacity),
@@ -114,7 +125,7 @@ func main() {
 		AllowNonTLSRelay:                *allowNonTLSRelay,
 
 		SummaryInterval:  *summaryInterval,
-		CovertDTLSConfig: covertdtls.ParseConfigString(*covertDTLSConfig),
+		CovertDTLSConfig: cDTLSconfig,
 	}
 
 	var logOutput = io.Discard

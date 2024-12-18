@@ -287,7 +287,17 @@ func (c *WebRTCPeer) preparePeerConnection(
 
 	s.SetNet(vnet)
 
-	if covertDTLSConfig.Mimic {
+	if covertDTLSConfig.Fingerprint != "" {
+		mimic := &mimicry.MimickedClientHello{}
+		err = mimic.LoadFingerprint(covertDTLSConfig.Fingerprint)
+		if err != nil {
+			log.Printf("NewPeerConnection ERROR: %s", err)
+			return err
+		}
+		profiles := utils.DefaultSRTPProtectionProfiles()
+		s.SetSRTPProtectionProfiles(profiles...)
+		s.SetDTLSClientHelloMessageHook(mimic.Hook)
+	} else if covertDTLSConfig.Mimic {
 		mimic := &mimicry.MimickedClientHello{}
 		if covertDTLSConfig.Randomize {
 			err = mimic.LoadRandomFingerprint()

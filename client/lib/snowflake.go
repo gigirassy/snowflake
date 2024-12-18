@@ -37,6 +37,7 @@ import (
 
 	"github.com/pion/ice/v4"
 	"github.com/pion/webrtc/v4"
+	"github.com/theodorsm/covert-dtls/pkg/fingerprints"
 	"github.com/xtaci/kcp-go/v5"
 	"github.com/xtaci/smux"
 
@@ -118,8 +119,9 @@ type ClientConfig struct {
 	// connect to, as specified in the Bridge line of the torrc.
 	BridgeFingerprint string
 	// CommunicationProxy is the proxy address for network communication
-	CommunicationProxy *url.URL
-	CovertDTLSConfig   string
+	CommunicationProxy    *url.URL
+	CovertDTLSConfig      string
+	CovertDTLSFingerprint string
 }
 
 // NewSnowflakeClient creates a new Snowflake transport client that can spawn multiple
@@ -165,9 +167,12 @@ func NewSnowflakeClient(config ClientConfig) (*Transport, error) {
 
 	eventsLogger := event.NewSnowflakeEventDispatcher()
 	var transport *Transport
-	// TODO: Add fingerprint config
+
 	if config.CovertDTLSConfig != "" {
 		covertDTLSConfig := covertdtls.ParseConfigString(config.CovertDTLSConfig)
+		if config.CovertDTLSFingerprint != "" {
+			covertDTLSConfig.Fingerprint = fingerprints.ClientHelloFingerprint(*&config.CovertDTLSFingerprint)
+		}
 		transport = &Transport{dialer: NewCovertWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy, &covertDTLSConfig), eventDispatcher: eventsLogger}
 	} else {
 		transport = &Transport{dialer: NewWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy), eventDispatcher: eventsLogger}

@@ -430,7 +430,17 @@ func (sf *SnowflakeProxy) makeWebRTCAPI() *webrtc.API {
 
 	settingsEngine.SetDTLSInsecureSkipHelloVerify(true)
 
-	if sf.CovertDTLSConfig.Mimic {
+	if sf.CovertDTLSConfig.Fingerprint != "" {
+		mimic := &mimicry.MimickedClientHello{}
+		err := mimic.LoadFingerprint(sf.CovertDTLSConfig.Fingerprint)
+		if err != nil {
+			log.Printf("NewPeerConnection ERROR: %s", err)
+			return nil
+		}
+		profiles := utils.DefaultSRTPProtectionProfiles()
+		settingsEngine.SetSRTPProtectionProfiles(profiles...)
+		settingsEngine.SetDTLSClientHelloMessageHook(mimic.Hook)
+	} else if sf.CovertDTLSConfig.Mimic {
 		mimic := &mimicry.MimickedClientHello{}
 		if sf.CovertDTLSConfig.Randomize {
 			err := mimic.LoadRandomFingerprint()
