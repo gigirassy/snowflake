@@ -1,8 +1,9 @@
 package covertdtls
 
 import (
-	"github.com/theodorsm/covert-dtls/pkg/fingerprints"
 	"strings"
+
+	"github.com/theodorsm/covert-dtls/pkg/fingerprints"
 )
 
 type CovertDTLSConfig struct {

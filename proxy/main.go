@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"github.com/theodorsm/covert-dtls/pkg/fingerprints"
+
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil/safelog"
+
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/covertdtls"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/version"

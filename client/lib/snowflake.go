@@ -166,17 +166,17 @@ func NewSnowflakeClient(config ClientConfig) (*Transport, error) {
 	}
 
 	eventsLogger := event.NewSnowflakeEventDispatcher()
-	var transport *Transport
+
+	var covertDTLSConfig covertdtls.CovertDTLSConfig
 
 	if config.CovertDTLSConfig != "" {
-		covertDTLSConfig := covertdtls.ParseConfigString(config.CovertDTLSConfig)
+		covertDTLSConfig = covertdtls.ParseConfigString(config.CovertDTLSConfig)
 		if config.CovertDTLSFingerprint != "" {
-			covertDTLSConfig.Fingerprint = fingerprints.ClientHelloFingerprint(*&config.CovertDTLSFingerprint)
+			covertDTLSConfig.Fingerprint = fingerprints.ClientHelloFingerprint(config.CovertDTLSFingerprint)
 		}
-		transport = &Transport{dialer: NewCovertWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy, &covertDTLSConfig), eventDispatcher: eventsLogger}
-	} else {
-		transport = &Transport{dialer: NewWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy), eventDispatcher: eventsLogger}
 	}
+
+	transport := &Transport{dialer: NewCovertWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventsLogger, config.CommunicationProxy, &covertDTLSConfig), eventDispatcher: eventsLogger}
 
 	return transport, nil
 }

@@ -16,11 +16,12 @@ package nat
 import (
 	"errors"
 	"fmt"
-	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/proxy"
 	"log"
 	"net"
 	"net/url"
 	"time"
+
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/proxy"
 
 	"github.com/pion/stun/v3"
 )

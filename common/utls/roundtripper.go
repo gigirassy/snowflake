@@ -5,12 +5,13 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"golang.org/x/net/proxy"
 	"net"
 	"net/http"
 	"net/url"
 	"sync"
 	"time"
+
+	"golang.org/x/net/proxy"
 
 	utls "github.com/refraction-networking/utls"
 	"golang.org/x/net/http2"

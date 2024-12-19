@@ -197,18 +197,7 @@ func NewWebRTCDialerWithEvents(broker *BrokerChannel, iceServers []webrtc.ICESer
 func NewWebRTCDialerWithEventsAndProxy(broker *BrokerChannel, iceServers []webrtc.ICEServer, max int,
 	eventLogger event.SnowflakeEventReceiver, proxy *url.URL,
 ) *WebRTCDialer {
-	config := webrtc.Configuration{
-		ICEServers: iceServers,
-	}
-
-	return &WebRTCDialer{
-		BrokerChannel: broker,
-		webrtcConfig:  &config,
-		max:           max,
-
-		eventLogger: eventLogger,
-		proxy:       proxy,
-	}
+	return NewCovertWebRTCDialerWithEventsAndProxy(broker, iceServers, max, eventLogger, proxy, nil)
 }
 
 // NewWebRTCDialerWithEventsAndProxy constructs a new WebRTCDialer setting DTLS mimicking and randomization.
@@ -235,10 +224,7 @@ func NewCovertWebRTCDialerWithEventsAndProxy(broker *BrokerChannel, iceServers [
 func (w WebRTCDialer) Catch() (*WebRTCPeer, error) {
 	// TODO: [#25591] Fetch ICE server information from Broker.
 	// TODO: [#25596] Consider TURN servers here too.
-	if w.covertDTLSConfig != nil {
-		return NewCovertWebRTCPeerWithEventsAndProxy(w.webrtcConfig, w.BrokerChannel, w.eventLogger, w.proxy, w.covertDTLSConfig)
-	}
-	return NewWebRTCPeerWithEventsAndProxy(w.webrtcConfig, w.BrokerChannel, w.eventLogger, w.proxy)
+	return NewCovertWebRTCPeerWithEventsAndProxy(w.webrtcConfig, w.BrokerChannel, w.eventLogger, w.proxy, w.covertDTLSConfig)
 }
 
 // GetMax returns the maximum number of snowflakes to collect.

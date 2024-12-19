@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/pion/webrtc/v4"
+
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil/safelog"
 )
 

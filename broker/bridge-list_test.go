@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/hex"
-	. "github.com/smartystreets/goconvey/convey"
-	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/bridgefingerprint"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
+
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/bridgefingerprint"
 )
 
 const DefaultBridges = `{"displayName":"default", "webSocketAddress":"wss://snowflake.torproject.org", "fingerprint":"2B280B23E1107BB62ABFC40DDCC8824814F80A72"}

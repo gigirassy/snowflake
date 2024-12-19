@@ -18,11 +18,14 @@ import (
 	"sync"
 	"syscall"
 
-	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil/safelog"
-	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/version"
 	"golang.org/x/crypto/acme/autocert"
 
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil/safelog"
+
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/version"
+
 	pt "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib"
+
 	sf "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/server/lib"
 )
 

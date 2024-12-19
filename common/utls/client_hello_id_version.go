@@ -1,8 +1,9 @@
 package utls
 
 import (
-	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/version"
 	"strings"
+
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/version"
 )
 
 func generateVersionOutput() string {

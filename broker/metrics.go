@@ -16,7 +16,9 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"gitlab.torproject.org/tpo/anti-censorship/geoip"
+
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/ptutil/safeprom"
+
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/messages"
 )
 
