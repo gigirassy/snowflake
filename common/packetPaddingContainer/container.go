@@ -11,8 +11,8 @@ type packetPaddingContainer struct {
 
 func (c packetPaddingContainer) Pack(data_OWNERSHIP_RELINQUISHED []byte, padding int) []byte {
 	data := append(data_OWNERSHIP_RELINQUISHED, make([]byte, padding)...)
-	data_length := len(data_OWNERSHIP_RELINQUISHED)
-	data = append(data, byte(data_length>>8), byte(data_length))
+	dataLength := len(data_OWNERSHIP_RELINQUISHED)
+	data = binary.BigEndian.AppendUint16(data, uint16(dataLength))
 	return data
 }
 
@@ -34,14 +34,16 @@ func (c packetPaddingContainer) Pad(padding int) []byte {
 }
 
 func (c packetPaddingContainer) Unpack(wrappedData_OWNERSHIP_RELINQUISHED []byte) ([]byte, int) {
-	if len(wrappedData_OWNERSHIP_RELINQUISHED) < 2 {
-		return nil, len(wrappedData_OWNERSHIP_RELINQUISHED)
+	dataLength := len(wrappedData_OWNERSHIP_RELINQUISHED)
+	if dataLength < 2 {
+		return nil, dataLength
 	}
-	wrappedData_tail := wrappedData_OWNERSHIP_RELINQUISHED[len(wrappedData_OWNERSHIP_RELINQUISHED)-2:]
-	dataLength := int(binary.BigEndian.Uint16(wrappedData_tail))
-	paddingLength := len(wrappedData_OWNERSHIP_RELINQUISHED) - dataLength - 2
+
+	dataLen := int(binary.BigEndian.Uint16(wrappedData_OWNERSHIP_RELINQUISHED[dataLength-2:]))
+	paddingLength := dataLength - dataLen - 2
 	if paddingLength < 0 {
 		return nil, paddingLength
 	}
-	return wrappedData_OWNERSHIP_RELINQUISHED[:dataLength], paddingLength
+
+	return wrappedData_OWNERSHIP_RELINQUISHED[:dataLen], paddingLength
 }
