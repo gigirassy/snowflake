@@ -1,4 +1,4 @@
-package packetPaddingContainer
+package packetpadding
 
 import "encoding/binary"
 

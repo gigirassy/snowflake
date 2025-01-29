@@ -1,4 +1,4 @@
-package packetPaddingContainer
+package packetpadding
 
 // PacketPaddingContainer is an interface that defines methods to pad packets
 // with a given number of bytes, and to unpack the padding from a padded packet.

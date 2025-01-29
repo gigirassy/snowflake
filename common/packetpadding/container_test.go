@@ -1,16 +1,16 @@
-package packetPaddingContainer_test
+package packetpadding_test
 
 import (
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/packetPaddingContainer"
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/packetpadding"
 )
 
 func TestPacketPaddingContainer(t *testing.T) {
 	Convey("Given a PacketPaddingContainer", t, func() {
-		container := packetPaddingContainer.New()
+		container := packetpadding.New()
 
 		Convey("When packing data with padding", func() {
 			data := []byte("testdata")
