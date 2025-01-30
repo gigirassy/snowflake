@@ -41,6 +41,8 @@ func (conn *Conn) SetDeadline(t time.Time) error {
 	return err
 }
 
+func (conn *Conn) MessageBoundaryPreserved() {}
+
 func readLoop(w io.Writer, ws *websocket.Conn) error {
 	var buf [2048]byte
 	for {

@@ -412,3 +412,5 @@ func (c *WebRTCPeer) cleanup() {
 		}
 	}
 }
+
+func (c *WebRTCPeer) MessageBoundaryPreserved() {}

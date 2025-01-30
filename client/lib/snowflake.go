@@ -344,8 +344,7 @@ func newSession(snowflakes SnowflakeCollector) (net.PacketConn, *smux.Session, e
 		log.Println("---- Handler: snowflake assigned ----")
 
 		packetConnWrapper := newPacketConnWrapper(dummyAddr{}, dummyAddr{},
-			packetpadding.NewPaddableConnection(
-				ConfirmsReadWriteCloserPreservesMessageBoundary(conn),
+			packetpadding.NewPaddableConnection(conn,
 				packetpadding.New()))
 
 		return packetConnWrapper, nil

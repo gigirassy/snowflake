@@ -12,16 +12,6 @@ type ReadWriteCloserPreservesBoundary interface {
 	MessageBoundaryPreserved()
 }
 
-func ConfirmsReadWriteCloserPreservesMessageBoundary(rwc io.ReadWriteCloser) ReadWriteCloserPreservesBoundary {
-	return &messageBoundaryPreservedReadWriteCloser{rwc}
-}
-
-type messageBoundaryPreservedReadWriteCloser struct {
-	io.ReadWriteCloser
-}
-
-func (m *messageBoundaryPreservedReadWriteCloser) MessageBoundaryPreserved() {}
-
 var errENOSYS = errors.New("not implemented")
 
 func newPacketConnWrapper(localAddr, remoteAddr net.Addr, rwc ReadWriteCloserPreservesBoundary) net.PacketConn {

@@ -115,7 +115,7 @@ func (handler *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (handler *httpHandler) turboTunnelUDPLikeMode(conn net.Conn, addr net.Addr, protocol string) error {
+func (handler *httpHandler) turboTunnelUDPLikeMode(conn *websocketconn.Conn, addr net.Addr, protocol string) error {
 	// Read the ClientID from the WebRTC data channel protocol string. Every
 	// packet received on this WebSocket connection pertains to the same
 	// ClientID.
@@ -143,8 +143,7 @@ func (handler *httpHandler) turboTunnelUDPLikeMode(conn net.Conn, addr net.Addr,
 	wg.Add(2)
 	done := make(chan struct{})
 
-	connPaddable := packetpadding.NewPaddableConnection(
-		packetpadding.ConfirmsReadWriteCloserPreservesMessageBoundary(conn), packetpadding.New())
+	connPaddable := packetpadding.NewPaddableConnection(conn, packetpadding.New())
 
 	// The remainder of the WebSocket stream consists of packets, one packet
 	// per WebSocket message. We read them one by one and feed them into the
