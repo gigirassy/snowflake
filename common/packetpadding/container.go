@@ -40,6 +40,9 @@ func (c packetPaddingContainer) Unpack(wrappedData_OWNERSHIP_RELINQUISHED []byte
 	}
 
 	dataLen := int(binary.BigEndian.Uint16(wrappedData_OWNERSHIP_RELINQUISHED[dataLength-2:]))
+	if dataLen > 2047 {
+		return nil, 0
+	}
 	paddingLength := dataLength - dataLen - 2
 	if paddingLength < 0 {
 		return nil, paddingLength
