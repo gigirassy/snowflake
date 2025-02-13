@@ -143,7 +143,7 @@ func (handler *httpHandler) turboTunnelUDPLikeMode(conn *websocketconn.Conn, add
 	wg.Add(2)
 	done := make(chan struct{})
 
-	connPaddable := packetpadding.NewPaddableConnection(conn, packetpadding.New())
+	connPaddable := packetpadding.NewPaddableConnection(conn)
 
 	// The remainder of the WebSocket stream consists of packets, one packet
 	// per WebSocket message. We read them one by one and feed them into the
