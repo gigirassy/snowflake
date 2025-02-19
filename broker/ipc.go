@@ -5,11 +5,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
-	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/bridgefingerprint"
-
 	"github.com/prometheus/client_golang/prometheus"
+
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/bridgefingerprint"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/messages"
 )
 
@@ -66,9 +68,46 @@ func (i *IPC) Debug(_ interface{}, response *string) error {
 	return nil
 }
 
+func versionCompare(versionL, versionR string) int {
+	versionSpliter := func(version string) (int64, int64) {
+		s := strings.Split(version, ".")
+		if len(s) != 2 {
+			return -1, -1
+		}
+		major, err := strconv.ParseInt(s[0], 10, 64)
+		if err != nil {
+			return -1, -1
+		}
+		minor, err := strconv.ParseInt(s[1], 10, 64)
+		if err != nil {
+			return -1, -1
+		}
+		return major, minor
+	}
+	versionLMajor, versionLMinor := versionSpliter(versionL)
+	versionRMajor, versionRMinor := versionSpliter(versionR)
+	if versionLMajor > versionRMajor {
+		return -1
+	} else if versionLMajor == versionRMajor {
+		if versionLMinor > versionRMinor {
+			return -1
+		} else if versionLMinor == versionRMinor {
+			return 0
+		} else {
+			return 1
+		}
+	} else {
+		return 1
+	}
+}
+
 func (i *IPC) ProxyPolls(arg messages.Arg, response *[]byte) error {
-	sid, proxyType, natType, clients, relayPattern, relayPatternSupported, err := messages.DecodeProxyPollRequestWithRelayPrefix(arg.Body)
+	sid, proxyType, natType, clients, relayPattern, relayPatternSupported, version, err := messages.DecodeProxyPollRequestWithRelayPrefixAndReturnVersion(arg.Body)
 	if err != nil {
+		return messages.ErrBadRequest
+	}
+
+	if versionCompare(i.ctx.minProxyVersion, version) < 0 {
 		return messages.ErrBadRequest
 	}
 

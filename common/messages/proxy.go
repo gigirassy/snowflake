@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	version      = "1.3"
+	version      = "1.4"
 	ProxyUnknown = "unknown"
 )
 
@@ -124,11 +124,18 @@ func DecodeProxyPollRequest(data []byte) (sid string, proxyType string, natType 
 	return
 }
 
-// Decodes a poll message from a snowflake proxy and returns the
-// sid, proxy type, nat type and clients of the proxy on success
-// and an error if it failed
 func DecodeProxyPollRequestWithRelayPrefix(data []byte) (
 	sid string, proxyType string, natType string, clients int, relayPrefix string, relayPrefixAware bool, err error) {
+	sid, proxyType, natType, clients, relayPrefix, relayPrefixAware, _, err = DecodeProxyPollRequestWithRelayPrefixAndReturnVersion(data)
+	return
+}
+
+// Decodes a poll message from a snowflake proxy and returns the
+// sid, proxy type, nat type and clients, version of the proxy on success
+// and an error if it failed
+func DecodeProxyPollRequestWithRelayPrefixAndReturnVersion(data []byte) (
+	sid string, proxyType string, natType string, clients int,
+	relayPrefix string, relayPrefixAware bool, version string, err error) {
 	var message ProxyPollRequest
 
 	err = json.Unmarshal(data, &message)
@@ -169,7 +176,7 @@ func DecodeProxyPollRequestWithRelayPrefix(data []byte) (
 		acceptedRelayPattern = *message.AcceptedRelayPattern
 	}
 	return message.Sid, message.Type, message.NAT, message.Clients,
-		acceptedRelayPattern, message.AcceptedRelayPattern != nil, nil
+		acceptedRelayPattern, message.AcceptedRelayPattern != nil, message.Version, nil
 }
 
 type ProxyPollResponse struct {

@@ -1,10 +1,13 @@
 package snowflake_server
 
 import (
+	"bufio"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
+	"fmt"
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/encapsulation"
 	"io"
 	"log"
 	"net"
@@ -108,11 +111,102 @@ func (handler *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	addr := clientAddr(clientIPParam)
 	protocol := r.URL.Query().Get("protocol")
 
+	if protocol == "" {
+		err = handler.turbotunnelMode(conn, addr)
+		if err != nil && err != io.EOF {
+			log.Println(err)
+			return
+		}
+	}
+
 	err = handler.turboTunnelUDPLikeMode(conn, addr, protocol)
 	if err != nil && err != io.EOF {
 		log.Println(err)
 		return
 	}
+}
+
+// turbotunnelMode handles clients that sent turbotunnel.Token at the start of
+// their stream. These clients expect to send and receive encapsulated packets,
+// with a long-lived session identified by ClientID.
+func (handler *httpHandler) turbotunnelMode(conn net.Conn, addr net.Addr) error {
+	// Read the ClientID prefix. Every packet encapsulated in this WebSocket
+	// connection pertains to the same ClientID.
+	var clientID turbotunnel.ClientID
+	_, err := io.ReadFull(conn, clientID[:])
+	if err != nil {
+		return fmt.Errorf("reading ClientID: %w", err)
+	}
+
+	// Store a short-term mapping from the ClientID to the client IP
+	// address attached to this WebSocket connection. tor will want us to
+	// provide a client IP address when we call pt.DialOr. But a KCP session
+	// does not necessarily correspond to any single IP address--it's
+	// composed of packets that are carried in possibly multiple WebSocket
+	// streams. We apply the heuristic that the IP address of the most
+	// recent WebSocket connection that has had to do with a session, at the
+	// time the session is established, is the IP address that should be
+	// credited for the entire KCP session.
+	clientIDAddrMap.Set(clientID, addr)
+
+	pconn := handler.lookupPacketConn(clientID)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	done := make(chan struct{})
+
+	// The remainder of the WebSocket stream consists of encapsulated
+	// packets. We read them one by one and feed them into the
+	// QueuePacketConn on which kcp.ServeConn was set up, which eventually
+	// leads to KCP-level sessions in the acceptSessions function.
+	go func() {
+		defer wg.Done()
+		defer close(done) // Signal the write loop to finish
+		var p [2048]byte
+		for {
+			n, err := encapsulation.ReadData(conn, p[:])
+			if err == io.ErrShortBuffer {
+				err = nil
+			}
+			if err != nil {
+				return
+			}
+			pconn.QueueIncoming(p[:n], clientID)
+		}
+	}()
+
+	// At the same time, grab packets addressed to this ClientID and
+	// encapsulate them into the downstream.
+	go func() {
+		defer wg.Done()
+		defer conn.Close() // Signal the read loop to finish
+
+		// Buffer encapsulation.WriteData operations to keep length
+		// prefixes in the same send as the data that follows.
+		bw := bufio.NewWriter(conn)
+		for {
+			select {
+			case <-done:
+				return
+			case p, ok := <-pconn.OutgoingQueue(clientID):
+				if !ok {
+					return
+				}
+				_, err := encapsulation.WriteData(bw, p)
+				pconn.Restore(p)
+				if err == nil {
+					err = bw.Flush()
+				}
+				if err != nil {
+					return
+				}
+			}
+		}
+	}()
+
+	wg.Wait()
+
+	return nil
 }
 
 func (handler *httpHandler) turboTunnelUDPLikeMode(conn *websocketconn.Conn, addr net.Addr, protocol string) error {

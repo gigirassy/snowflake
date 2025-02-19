@@ -47,6 +47,7 @@ type BrokerContext struct {
 	bridgeList                     BridgeListHolderFileBased
 	allowedRelayPattern            string
 	presumedPatternForLegacyClient string
+	minProxyVersion                string
 }
 
 func (ctx *BrokerContext) GetBridgeInfo(fingerprint bridgefingerprint.Fingerprint) (BridgeInfo, error) {
@@ -57,6 +58,20 @@ func NewBrokerContext(
 	metricsLogger *log.Logger,
 	allowedRelayPattern,
 	presumedPatternForLegacyClient string,
+) *BrokerContext {
+	return NewBrokerContextWithMinProxyVersion(
+		metricsLogger,
+		allowedRelayPattern,
+		presumedPatternForLegacyClient,
+		"1.3",
+	)
+}
+
+func NewBrokerContextWithMinProxyVersion(
+	metricsLogger *log.Logger,
+	allowedRelayPattern,
+	presumedPatternForLegacyClient string,
+	minProxyVersion string,
 ) *BrokerContext {
 	snowflakes := new(SnowflakeHeap)
 	heap.Init(snowflakes)
@@ -87,6 +102,7 @@ func NewBrokerContext(
 		bridgeList:                     bridgeListHolder,
 		allowedRelayPattern:            allowedRelayPattern,
 		presumedPatternForLegacyClient: presumedPatternForLegacyClient,
+		minProxyVersion:                minProxyVersion,
 	}
 }
 
@@ -204,6 +220,7 @@ func main() {
 	var disableGeoip bool
 	var metricsFilename string
 	var unsafeLogging bool
+	var minProxyVersion string
 
 	flag.StringVar(&acmeEmail, "acme-email", "", "optional contact email for Let's Encrypt notifications")
 	flag.StringVar(&acmeHostnamesCommas, "acme-hostnames", "", "comma-separated hostnames for TLS certificate")
@@ -222,6 +239,7 @@ func main() {
 	flag.BoolVar(&disableGeoip, "disable-geoip", false, "don't use geoip for stats collection")
 	flag.StringVar(&metricsFilename, "metrics-log", "", "path to metrics logging output")
 	flag.BoolVar(&unsafeLogging, "unsafe-logging", false, "prevent logs from being scrubbed")
+	flag.StringVar(&minProxyVersion, "min-proxy-version", "1.3", "the minimum version of the Snowflake proxy that the broker will accept")
 	flag.Parse()
 
 	var err error
