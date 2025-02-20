@@ -63,7 +63,7 @@ func NewBrokerContext(
 		metricsLogger,
 		allowedRelayPattern,
 		presumedPatternForLegacyClient,
-		"1.3",
+		"1.0",
 	)
 }
 
@@ -239,7 +239,7 @@ func main() {
 	flag.BoolVar(&disableGeoip, "disable-geoip", false, "don't use geoip for stats collection")
 	flag.StringVar(&metricsFilename, "metrics-log", "", "path to metrics logging output")
 	flag.BoolVar(&unsafeLogging, "unsafe-logging", false, "prevent logs from being scrubbed")
-	flag.StringVar(&minProxyVersion, "min-proxy-version", "1.3", "the minimum version of the Snowflake proxy that the broker will accept")
+	flag.StringVar(&minProxyVersion, "min-proxy-version", "1.0", "the minimum version of the Snowflake proxy that the broker will accept")
 	flag.Parse()
 
 	var err error
@@ -266,7 +266,7 @@ func main() {
 
 	metricsLogger := log.New(metricsFile, "", 0)
 
-	ctx := NewBrokerContext(metricsLogger, allowedRelayPattern, presumedPatternForLegacyClient)
+	ctx := NewBrokerContextWithMinProxyVersion(metricsLogger, allowedRelayPattern, presumedPatternForLegacyClient, minProxyVersion)
 
 	if bridgeListFilePath != "" {
 		bridgeListFile, err := os.Open(bridgeListFilePath)
