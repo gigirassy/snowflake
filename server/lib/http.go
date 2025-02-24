@@ -117,6 +117,7 @@ func (handler *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
+		return
 	}
 
 	err = handler.turboTunnelUDPLikeMode(conn, addr, protocol)
