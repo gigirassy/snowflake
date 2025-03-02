@@ -635,7 +635,11 @@ func (sf *SnowflakeProxy) makeNewPeerConnection(
 	return pc, nil
 }
 
-func (sf *SnowflakeProxy) runSession(sid string) {
+func (sf *SnowflakeProxy) runSession(
+	offer *webrtc.SessionDescription,
+	relayURL string,
+	sid string,
+) {
 	connectedToClient := false
 	defer func() {
 		if !connectedToClient {
@@ -644,10 +648,6 @@ func (sf *SnowflakeProxy) runSession(sid string) {
 		// Otherwise we'll `tokens.ret()` when the connection finishes.
 	}()
 
-	offer, relayURL := broker.pollOffer(sid, sf.ProxyType, sf.RelayDomainNamePattern)
-	if offer == nil {
-		return
-	}
 	log.Printf("Received Offer From Broker: \n\t%s", strings.ReplaceAll(offer.SDP, "\n", "\n\t"))
 
 	if relayURL != "" {
@@ -844,7 +844,12 @@ func (sf *SnowflakeProxy) Start() error {
 		default:
 			tokens.get()
 			sessionID := genSessionID()
-			sf.runSession(sessionID)
+			offer, relayURL := broker.pollOffer(sessionID, sf.ProxyType, sf.RelayDomainNamePattern)
+			if offer == nil {
+				tokens.ret()
+				continue
+			}
+			go sf.runSession(offer, relayURL, sessionID)
 		}
 	}
 	return nil
