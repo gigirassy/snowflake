@@ -822,6 +822,8 @@ func (sf *SnowflakeProxy) Start() error {
 	}
 	tokens = newTokens(sf.Capacity)
 
+	sdnotifyStatus("Checking NAT type...")
+
 	err = sf.checkNATType(config, sf.NATProbeURL)
 	if err != nil {
 		// non-fatal error. Log it and continue
@@ -829,6 +831,9 @@ func (sf *SnowflakeProxy) Start() error {
 		setCurrentNATType(NATUnknown)
 	}
 	sf.EventDispatcher.OnNewSnowflakeEvent(event.EventOnCurrentNATTypeDetermined{CurNATType: getCurrentNATType()})
+
+	sdnotifyStatus(fmt.Sprintf("NAT type: %s", getCurrentNATType()))
+	sdnotifyReady()
 
 	NatRetestTask := task.Periodic{
 		Interval: sf.NATTypeMeasurementInterval,
@@ -845,6 +850,16 @@ func (sf *SnowflakeProxy) Start() error {
 		NatRetestTask.WaitThenStart()
 		defer NatRetestTask.Close()
 	}
+
+	WatchdogTask := task.Periodic{
+		Interval: 5 * time.Minute,
+		Execute: func() error {
+			sdnotifyWatchdog()
+			return nil
+		},
+	}
+	WatchdogTask.Start()
+	defer WatchdogTask.Close()
 
 	ticker := time.NewTicker(sf.PollInterval)
 	defer ticker.Stop()
@@ -864,6 +879,7 @@ func (sf *SnowflakeProxy) Start() error {
 
 // Stop closes all existing connections and shuts down the Snowflake.
 func (sf *SnowflakeProxy) Stop() {
+	sdnotifyStopping()
 	close(sf.shutdown)
 }
 
