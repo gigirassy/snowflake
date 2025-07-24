@@ -8,7 +8,14 @@ WORKDIR /app/proxy
 RUN go get
 RUN CGO_ENABLED=0 go build -o proxy -ldflags '-extldflags "-static" -w -s'  .
 
+RUN groupadd nonroot
+RUN useradd --gid nonroot nonroot
+
 FROM scratch
+
+COPY --from=build /etc/passwd /etc/passwd
+COPY --from=build /etc/group /etc/group
+USER nonroot:nonroot
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
