@@ -451,6 +451,19 @@ func (sf *SnowflakeProxy) makePeerConnectionFromOffer(
 		return nil, fmt.Errorf("accept: NewPeerConnection: %s", err)
 	}
 
+	pc.OnTrack(func(remote *webrtc.TrackRemote, receiver *webrtc.RTPReceiver) {
+		log.Printf("Track has started streamId(%s) id(%s) rid(%s) \n", remote.StreamID(), remote.ID(), remote.RID())
+
+		for {
+			rtcpBuf := make([]byte, 1500)
+			for {
+				if _, _, err := receiver.Read(rtcpBuf); err != nil {
+					return
+				}
+			}
+		}
+	})
+
 	pc.OnDataChannel(func(dc *webrtc.DataChannel) {
 		log.Printf("New Data Channel %s-%d\n", dc.Label(), dc.ID())
 		close(dataChan)

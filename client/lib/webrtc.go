@@ -15,6 +15,7 @@ import (
 	"github.com/pion/transport/v3"
 	"github.com/pion/transport/v3/stdnet"
 	"github.com/pion/webrtc/v4"
+	"github.com/pion/webrtc/v4/pkg/media"
 
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/proxy"
@@ -296,6 +297,7 @@ func (c *WebRTCPeer) preparePeerConnection(
 		log.Printf("NewPeerConnection ERROR: %s", err)
 		return err
 	}
+
 	ordered := true
 	dataChannelOptions := &webrtc.DataChannelInit{
 		Ordered: &ordered,
@@ -340,6 +342,8 @@ func (c *WebRTCPeer) preparePeerConnection(
 	c.open = make(chan struct{})
 	log.Println("WebRTC: DataChannel created")
 
+	c.openMediaTrack()
+
 	offer, err := c.pc.CreateOffer(nil)
 	// TODO: Potentially timeout and retry if ICE isn't working.
 	if err != nil {
@@ -363,6 +367,48 @@ func (c *WebRTCPeer) preparePeerConnection(
 	<-done // Wait for ICE candidate gathering to complete.
 
 	return nil
+}
+
+func (c *WebRTCPeer) openMediaTrack() {
+	videoTrack, err := webrtc.NewTrackLocalStaticSample(
+		webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeAV1}, "video", "pion",
+	)
+	if err != nil {
+		log.Printf("webrtc.NewTrackLocalStaticSample ERROR: %s", err)
+		return
+	}
+
+	rtpSender, err := c.pc.AddTrack(videoTrack)
+	if err != nil {
+		log.Printf("webrtc.AddTrack ERROR: %s", err)
+		return
+	}
+
+	go func() {
+		rtcpBuf := make([]byte, 1500)
+		for {
+			if _, _, rtcpErr := rtpSender.Read(rtcpBuf); rtcpErr != nil {
+				return
+			}
+		}
+	}()
+
+	go func() {
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+
+		for ; true; <-ticker.C {
+			bufSize := randomInt(1000, 2500)
+			buf := make([]byte, bufSize)
+
+			err := videoTrack.WriteSample(media.Sample{Data: buf, Duration: time.Second})
+			if err != nil {
+				log.Printf("webrtc.WriteSample ERROR: %s", err)
+			}
+		}
+	}()
+
+	log.Println("WebRTC: Media track opened")
 }
 
 // cleanup closes all channels and transports
