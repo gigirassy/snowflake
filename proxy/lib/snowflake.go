@@ -46,6 +46,8 @@ import (
 	"github.com/pion/transport/v3/stdnet"
 	"github.com/pion/webrtc/v4"
 
+	"github.com/cloudflare/backoff"
+
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/constants"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/messages"
@@ -163,6 +165,7 @@ type SnowflakeProxy struct {
 	NATProbeURL string
 	// NATTypeMeasurementInterval is time before NAT type is retested
 	NATTypeMeasurementInterval time.Duration
+	NATMeasurementRetry        bool
 	// ProxyType is the type reported to the broker, if not provided it "standalone" will be used
 	ProxyType       string
 	EventDispatcher event.SnowflakeEventDispatcher
@@ -822,7 +825,14 @@ func (sf *SnowflakeProxy) Start() error {
 	}
 	tokens = newTokens(sf.Capacity)
 
-	err = sf.checkNATType(config, sf.NATProbeURL)
+	for {
+		err = sf.checkNATType(config, sf.NATProbeURL)
+		if getCurrentNATType() == NATUnrestricted || !sf.NATMeasurementRetry {
+			break
+		}
+
+		<-time.After(5 * time.Second)
+	}
 	if err != nil {
 		// non-fatal error. Log it and continue
 		log.Printf(err.Error())
@@ -833,7 +843,21 @@ func (sf *SnowflakeProxy) Start() error {
 	NatRetestTask := task.Periodic{
 		Interval: sf.NATTypeMeasurementInterval,
 		Execute: func() error {
-			return sf.checkNATType(config, sf.NATProbeURL)
+			var err error
+
+			b := backoff.New(5*time.Minute, sf.NATTypeMeasurementInterval)
+			for {
+				err = sf.checkNATType(config, sf.NATProbeURL)
+				sf.EventDispatcher.OnNewSnowflakeEvent(event.EventOnCurrentNATTypeDetermined{CurNATType: getCurrentNATType()})
+
+				if getCurrentNATType() == NATUnrestricted || !sf.NATMeasurementRetry {
+					break
+				}
+
+				<-time.After(b.Duration())
+			}
+
+			return err
 		},
 		// Not setting OnError would shut down the periodic task on error by default.
 		OnError: func(err error) {

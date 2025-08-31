@@ -38,6 +38,7 @@ func main() {
 	allowNonTLSRelay := flag.Bool("allow-non-tls-relay", false, "allow this proxy to pass client's data to the relay in an unencrypted form.\nThis is only useful if the relay doesn't support encryption, e.g. for testing / development purposes.")
 	NATTypeMeasurementInterval := flag.Duration("nat-retest-interval", time.Hour*24,
 		"the time interval between NAT type is retests (see \"nat-probe-server\"). 0s disables retest. Valid time units are \"s\", \"m\", \"h\".")
+	natRetry := flag.Bool("nat-retry", false, "Retry NAT measurement when not unrestricted")
 	summaryInterval := flag.Duration("summary-interval", time.Hour,
 		"the time interval between summary log outputs, 0s disables summaries. Valid time units are \"s\", \"m\", \"h\".")
 	disableStatsLogger := flag.Bool("disable-stats-logger", false, "disable the exposing mechanism for stats using logs")
@@ -114,6 +115,7 @@ func main() {
 		EphemeralMaxPort:   ephemeralPortsRange[1],
 
 		NATTypeMeasurementInterval: *NATTypeMeasurementInterval,
+		NATMeasurementRetry:        *natRetry,
 		EventDispatcher:            eventLogger,
 
 		RelayDomainNamePattern:          *allowedRelayHostNamePattern,
