@@ -10,7 +10,7 @@ require (
 	github.com/clarkduvall/hyperloglog v0.0.0-20171127014514-a0107a5d8004
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/miekg/dns v1.1.65
+	github.com/miekg/dns v1.1.68
 	github.com/pion/ice/v4 v4.0.10
 	github.com/pion/sdp/v3 v3.0.16
 	github.com/pion/stun/v3 v3.0.0
