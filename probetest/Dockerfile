@@ -7,7 +7,7 @@ WORKDIR /app/probetest
 RUN go get
 RUN CGO_ENABLED=0 go build -o probetest -ldflags '-extldflags "-static" -w -s'  .
 
-FROM containers.torproject.org/tpo/tpa/base-images/debian:bookworm as debian-base
+FROM containers.torproject.org/tpo/tpa/base-images/debian:trixie as debian-base
 
 RUN apt-get update && apt-get install -y \
     curl \

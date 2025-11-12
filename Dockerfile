@@ -7,7 +7,7 @@ WORKDIR /app/proxy
 RUN go get
 RUN CGO_ENABLED=0 go build -o proxy -ldflags '-extldflags "-static" -w -s'  .
 
-FROM containers.torproject.org/tpo/tpa/base-images/debian:bookworm as debian-base
+FROM containers.torproject.org/tpo/tpa/base-images/debian:trixie as debian-base
 
 # Install dependencies to add Tor's repository.
 RUN apt-get update && apt-get install -y \
