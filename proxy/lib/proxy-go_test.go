@@ -506,13 +506,13 @@ func TestUtilityFuncs(t *testing.T) {
 			{pattern: "^snowflake.torproject.net$", allowNonTLS: false, targetURL: "wss://faketorproject.net", expects: fmt.Errorf("")},
 			{pattern: "snowflake.torproject.net$", allowNonTLS: false, targetURL: "wss://faketorproject.net", expects: fmt.Errorf("")},
 			{pattern: "snowflake.torproject.net$", allowNonTLS: false, targetURL: "wss://snowflake.torproject.net", expects: nil},
-			{pattern: "snowflake.torproject.net$", allowNonTLS: false, targetURL: "wss://imaginary-01-snowflake.torproject.net", expects: nil},
-			{pattern: "snowflake.torproject.net$", allowNonTLS: false, targetURL: "wss://imaginary-aaa-snowflake.torproject.net", expects: nil},
+			{pattern: "snowflake.torproject.net$", allowNonTLS: false, targetURL: "wss://imaginary-01-snowflake.torproject.net", expects: fmt.Errorf("")},
+			{pattern: "snowflake.torproject.net$", allowNonTLS: false, targetURL: "wss://imaginary-aaa-snowflake.torproject.net", expects: fmt.Errorf("")},
 			{pattern: "snowflake.torproject.net$", allowNonTLS: false, targetURL: "wss://imaginary-aaa-snowflake.faketorproject.net", expects: fmt.Errorf("")},
 
 			{pattern: "^torproject.net$", allowNonTLS: false, targetURL: "wss://faketorproject.net", expects: fmt.Errorf("")},
 			// Yes, this is how it works if there is no "^".
-			{pattern: "torproject.net$", allowNonTLS: false, targetURL: "wss://faketorproject.net", expects: nil},
+			{pattern: "torproject.net$", allowNonTLS: false, targetURL: "wss://faketorproject.net", expects: fmt.Errorf("")},
 
 			// NonTLS
 			{pattern: "snowflake.torproject.net$", allowNonTLS: false, targetURL: "ws://snowflake.torproject.net", expects: fmt.Errorf("")},
@@ -556,8 +556,17 @@ func TestUtilityFuncs(t *testing.T) {
 			{pattern: "$", allowNonTLS: true, targetURL: "//snowflake.torproject.net", expects: fmt.Errorf("")},
 			{pattern: "$", allowNonTLS: true, targetURL: "/path", expects: fmt.Errorf("")},
 			{pattern: "$", allowNonTLS: true, targetURL: "wss://snowflake.torproject .net", expects: fmt.Errorf("")},
-			{pattern: "$", allowNonTLS: true, targetURL: "wss://😀", expects: nil},
-			{pattern: "$", allowNonTLS: true, targetURL: "wss://пример.рф", expects: nil},
+			{pattern: "$", allowNonTLS: true, targetURL: "wss://😀", expects: fmt.Errorf("")},
+			{pattern: "$", allowNonTLS: true, targetURL: "wss://пример.рф", expects: fmt.Errorf("")},
+
+			// Local URLs
+			{pattern: "localhost$", allowNonTLS: false, targetURL: "wss://localhost", expects: fmt.Errorf("")},
+			{pattern: "test.internal$", allowNonTLS: false, targetURL: "wss://test.internal", expects: fmt.Errorf("")},
+			{pattern: "test.invalid$", allowNonTLS: false, targetURL: "wss://test.invalid", expects: fmt.Errorf("")},
+			{pattern: "test.localhost$", allowNonTLS: false, targetURL: "wss://test.localhost", expects: fmt.Errorf("")},
+			{pattern: "test.local$", allowNonTLS: false, targetURL: "wss://test.local", expects: fmt.Errorf("")},
+			{pattern: "test.onion$", allowNonTLS: false, targetURL: "wss://test.onion", expects: fmt.Errorf("")},
+			{pattern: "test.test$", allowNonTLS: false, targetURL: "wss://test.test", expects: fmt.Errorf("")},
 
 			// Non-websocket protocols
 			{pattern: "snowflake.torproject.net$", allowNonTLS: false, targetURL: "https://snowflake.torproject.net", expects: fmt.Errorf("")},
