@@ -48,6 +48,7 @@ import (
 
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/constants"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/event"
+	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/media"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/messages"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/namematcher"
 	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/v2/common/task"
@@ -451,6 +452,14 @@ func (sf *SnowflakeProxy) makePeerConnectionFromOffer(
 		return nil, fmt.Errorf("accept: NewPeerConnection: %s", err)
 	}
 
+
+	// Start duplex media handling (both incoming and outgoing tracks)
+	mediaChannel := media.NewMediaChannel()
+	err = mediaChannel.Start(pc)
+	if err != nil {
+		log.Printf("Failed to setup proxy media channel: %v", err)
+	}
+
 	pc.OnDataChannel(func(dc *webrtc.DataChannel) {
 		log.Printf("New Data Channel %s-%d\n", dc.Label(), dc.ID())
 		close(dataChan)
@@ -498,6 +507,9 @@ func (sf *SnowflakeProxy) makePeerConnectionFromOffer(
 				country, _ = sf.GeoIP.GetCountryByAddr(remoteIP)
 			}
 			sf.EventDispatcher.OnNewSnowflakeEvent(event.EventOnProxyConnectionOver{Country: country})
+
+			// Clean up media channel
+			mediaChannel.Stop()
 
 			conn.dc = nil
 			dc.Close()
@@ -825,7 +837,7 @@ func (sf *SnowflakeProxy) Start() error {
 	err = sf.checkNATType(config, sf.NATProbeURL)
 	if err != nil {
 		// non-fatal error. Log it and continue
-		log.Printf(err.Error())
+		log.Printf("%s", err.Error())
 		setCurrentNATType(NATUnknown)
 	}
 	sf.EventDispatcher.OnNewSnowflakeEvent(event.EventOnCurrentNATTypeDetermined{CurNATType: getCurrentNATType()})
